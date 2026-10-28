@@ -1,0 +1,32 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title class="wordmark">Historial</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <section class="list">
+    @if (errorMessage()) {
+      <p class="message">{{ errorMessage() }}</p>
+    } @else if (reservations().length === 0) {
+      <p class="message">Todavía no tienes citas en este dispositivo.</p>
+    } @else {
+      @for (reservation of reservations(); track reservation.reservationId) {
+        <article class="visit">
+          <div>
+            <h2>{{ reservation.serviceName }}</h2>
+            <p>{{ reservation.startsAt | date: 'EEE d MMM, HH:mm' }}</p>
+          </div>
+          <div class="meta">
+            <strong>{{ statusLabel[reservation.status] }}</strong>
+            <span>{{ formatPesos(reservation.depositAmountCents) }}</span>
+          </div>
+        </article>
+      }
+    }
+  </section>
+</ion-content>

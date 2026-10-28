@@ -1,0 +1,7 @@
+{
+  "name": "AniClare",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

@@ -1,0 +1,36 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title class="wordmark">AniClare</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <section class="hero">
+    <p class="eyebrow">Spa</p>
+    <h1>Tu siguiente cita, en un minuto.</h1>
+    <p>Elige servicio, terapeuta y horario. El anticipo aparta el lugar.</p>
+    <ion-button expand="block" (click)="reserve()">Reservar</ion-button>
+  </section>
+
+  <section class="catalog">
+    <h2>Servicios</h2>
+    @if (loadError()) {
+      <p class="message">{{ loadError() }}</p>
+    } @else if (services().length === 0) {
+      <p class="message">Cargando servicios...</p>
+    }
+    @for (service of services(); track service.id) {
+      <article class="service-card">
+        <div>
+          <h3>{{ service.name }}</h3>
+          <p>{{ service.durationMinutes }} min · anticipo {{ formatPesos(service.depositCents) }}</p>
+        </div>
+        <div class="deposit">
+          <span>Precio</span>
+          <strong>{{ formatPesos(service.priceCents) }}</strong>
+        </div>
+      </article>
+    }
+    <button type="button" class="admin-link" (click)="openAdmin()">Administración</button>
+  </section>
+</ion-content>

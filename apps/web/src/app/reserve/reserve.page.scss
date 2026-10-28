@@ -1,0 +1,55 @@
+.sheet,
+.confirmation {
+  width: min(720px, calc(100% - 32px));
+  margin: 8px auto 24px;
+}
+
+ion-item {
+  --background: #fffafb;
+  margin-bottom: 12px;
+  border-radius: 16px;
+}
+
+.when {
+  margin: 8px 0 18px;
+  padding: 8px 12px 12px;
+  border-radius: 16px;
+  background: #fffafb;
+}
+
+.when ion-label {
+  display: block;
+  margin: 8px 4px;
+  color: #8a6670;
+  font-size: 0.85rem;
+}
+
+ion-datetime {
+  width: 100%;
+  border-radius: 12px;
+}
+
+ion-note {
+  display: block;
+  margin-top: 12px;
+}
+
+.confirmation {
+  padding: 18px;
+  border-radius: 18px;
+  background: #f8eeee;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ion-color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.confirmation h2,
+.confirmation p {
+  margin: 6px 0 0;
+}

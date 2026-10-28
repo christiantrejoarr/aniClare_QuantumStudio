@@ -1,0 +1,66 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title class="wordmark">Reservar</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form class="sheet" (submit)="$event.preventDefault(); submit()">
+    <ion-item lines="none">
+      <ion-select
+        label="Servicio"
+        labelPlacement="stacked"
+        interface="popover"
+        [value]="serviceId()"
+        (ionChange)="onService($event)"
+      >
+        @for (service of services(); track service.id) {
+          <ion-select-option [value]="service.id">
+            {{ service.name }} · {{ service.durationMinutes }} min · {{ formatPesos(service.priceCents) }}
+          </ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+
+    <ion-item lines="none">
+      <ion-select
+        label="Terapeuta"
+        labelPlacement="stacked"
+        interface="popover"
+        [value]="therapistId()"
+        (ionChange)="onTherapist($event)"
+      >
+        @for (therapist of therapists; track therapist.id) {
+          <ion-select-option [value]="therapist.id">{{ therapist.name }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+
+    <div class="when">
+      <ion-label>Horario</ion-label>
+      <ion-datetime
+        presentation="date-time"
+        hourCycle="h23"
+        [min]="minStart"
+        [value]="startsAt()"
+        (ionChange)="onStart($event)"
+      ></ion-datetime>
+    </div>
+
+    <ion-button expand="block" type="submit" [disabled]="submitting() || !serviceId()">
+      {{ submitting() ? 'Apartando...' : 'Apartar con anticipo' }}
+    </ion-button>
+    @if (errorMessage()) {
+      <ion-note color="danger">{{ errorMessage() }}</ion-note>
+    }
+  </form>
+
+  @if (confirmation(); as reservation) {
+    <article class="confirmation">
+      <p class="eyebrow">Cita apartada</p>
+      <h2>{{ reservation.serviceName }}</h2>
+      <p>Anticipo {{ formatPesos(reservation.depositAmountCents) }}</p>
+      <p>Referencia {{ reservation.paymentReference }}</p>
+    </article>
+  }
+</ion-content>

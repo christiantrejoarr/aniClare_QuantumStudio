@@ -1,0 +1,82 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title class="wordmark">Administración</ion-title>
+    @if (authenticated()) {
+      <ion-button slot="end" fill="clear" (click)="leave()">Salir</ion-button>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (!authenticated()) {
+    <section class="panel">
+      <p class="eyebrow">Spa</p>
+      <h1>Panel del spa</h1>
+      <p class="lead">Aquí ves todas las reservas y actualizas el precio de cada servicio.</p>
+      <ion-input
+        label="Clave de administración"
+        labelPlacement="stacked"
+        fill="outline"
+        type="password"
+        [value]="accessKey()"
+        (ionInput)="onKey($event)"
+      ></ion-input>
+      @if (errorMessage()) {
+        <p class="message">{{ errorMessage() }}</p>
+      }
+      <ion-button expand="block" (click)="enter()">Entrar</ion-button>
+      <button type="button" class="text-link" (click)="backHome()">Volver al sitio</button>
+    </section>
+  } @else {
+    <section class="panel">
+      <ion-segment [value]="section()" (ionChange)="onSection($event)">
+        <ion-segment-button value="reservas">
+          <ion-label>Reservas</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="servicios">
+          <ion-label>Servicios</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      @if (errorMessage()) {
+        <p class="message">{{ errorMessage() }}</p>
+      } @else if (loading()) {
+        <p class="message">Cargando el panel...</p>
+      } @else if (section() === 'reservas') {
+        @if (reservations().length === 0) {
+          <p class="message">Todavía no hay reservas.</p>
+        }
+        @for (reservation of reservations(); track reservation.reservationId) {
+          <article class="card">
+            <div>
+              <h2>{{ reservation.serviceName }}</h2>
+              <p>{{ reservation.startsAt | date: 'EEE d MMM, HH:mm' }} · {{ therapistName(reservation.therapistId) }}</p>
+            </div>
+            <div class="meta">
+              <strong>{{ statusLabel[reservation.status] }}</strong>
+              <span>Anticipo {{ formatPesos(reservation.depositAmountCents) }}</span>
+            </div>
+          </article>
+        }
+      } @else {
+        <p class="hint">El cambio aplica a las citas nuevas. Las reservas ya hechas conservan su anticipo.</p>
+        @for (draft of drafts(); track draft.id) {
+          <article class="editor">
+            <ion-input label="Nombre" labelPlacement="stacked" fill="outline" [value]="draft.name" (ionInput)="onDraft(draft, 'name', $event)"></ion-input>
+            <ion-textarea label="Descripción" labelPlacement="stacked" fill="outline" [autoGrow]="true" [value]="draft.description" (ionInput)="onDraft(draft, 'description', $event)"></ion-textarea>
+            <div class="prices">
+              <ion-input label="Duración (min)" labelPlacement="stacked" fill="outline" type="number" inputmode="numeric" [value]="draft.durationMinutes" (ionInput)="onDraft(draft, 'durationMinutes', $event)"></ion-input>
+              <ion-input label="Precio (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="draft.pricePesos" (ionInput)="onDraft(draft, 'pricePesos', $event)"></ion-input>
+              <ion-input label="Anticipo (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="draft.depositPesos" (ionInput)="onDraft(draft, 'depositPesos', $event)"></ion-input>
+            </div>
+            <ion-toggle [checked]="draft.active" (ionChange)="onActive(draft, $event)">Visible en el sitio</ion-toggle>
+            @if (draft.message) {
+              <p class="message">{{ draft.message }}</p>
+            }
+            <ion-button expand="block" (click)="save(draft)" [disabled]="draft.saving">Guardar</ion-button>
+          </article>
+        }
+      }
+    </section>
+  }
+</ion-content>
