@@ -2,6 +2,8 @@
 -- cliente, servicio y terapeuta se referencian por id.
 -- El anticipo guarda monto y estado, nunca datos de tarjeta.
 
+CREATE SCHEMA IF NOT EXISTS booking;
+
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE IF NOT EXISTS booking.reservations (

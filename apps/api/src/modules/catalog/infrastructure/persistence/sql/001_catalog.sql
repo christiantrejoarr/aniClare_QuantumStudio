@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS catalog;
+
 CREATE TABLE IF NOT EXISTS catalog.services (
   id uuid PRIMARY KEY,
   name text NOT NULL,
