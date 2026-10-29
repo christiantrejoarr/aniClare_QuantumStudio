@@ -83,6 +83,12 @@ export class ReservePage {
       return;
     }
     popover.classList.add('aniclare-time');
+    const hourColumn = popover.querySelector('ion-picker-column[aria-label="Select an hour"]');
+    if (hourColumn instanceof HTMLElement && hourColumn.dataset['minutesWired'] !== 'true') {
+      hourColumn.dataset['minutesWired'] = 'true';
+      hourColumn.addEventListener('ionChange', () => this.applyMinuteChoices(hourColumn));
+    }
+    this.applyMinuteChoices(hourColumn);
     if (!popover.querySelector('.time-actions')) {
       const actions = document.createElement('div');
       actions.className = 'time-actions';
@@ -135,8 +141,14 @@ export class ReservePage {
   }
 
   hourValues(): string {
-    const hours = this.hoursFor(this.startsAt().slice(0, 10)).map((hour) => String(Number(hour.slice(0, 2))));
+    const hours = [
+      ...new Set(this.hoursFor(this.startsAt().slice(0, 10)).map((slot) => String(Number(slot.slice(0, 2))))),
+    ];
     return hours.length > 0 ? hours.join(',') : '0';
+  }
+
+  minuteValues(): string {
+    return this.minuteValuesFor(this.startsAt().slice(11, 13));
   }
 
   slotOpen(): boolean {
@@ -256,18 +268,49 @@ export class ReservePage {
     });
   }
 
+  private applyMinuteChoices(hourColumn: Element | null): void {
+    const datetime = this.timeControl();
+    if (!datetime) {
+      return;
+    }
+    const selected = hourColumn instanceof HTMLElement ? Number((hourColumn as HourColumn).value) : Number.NaN;
+    const hour = Number.isFinite(selected) ? String(selected).padStart(2, '0') : this.startsAt().slice(11, 13);
+    datetime.minuteValues = this.minuteValuesFor(hour);
+  }
+
+  private minuteValuesFor(hour: string): string {
+    const normalized = hour.padStart(2, '0');
+    const minutes = this.hoursFor(this.startsAt().slice(0, 10))
+      .filter((slot) => slot.slice(0, 2) === normalized)
+      .map((slot) => String(Number(slot.slice(3, 5))));
+    return minutes.length > 0 ? minutes.join(',') : '0';
+  }
+
   private hoursFor(day: string): string[] {
     return this.openDays().find((item) => item.date === day)?.hours ?? [];
   }
 
   private snapValue(value: string): string | null {
-    const hours = this.hoursFor(value.slice(0, 10));
-    if (hours.length === 0) {
+    const slots = this.hoursFor(value.slice(0, 10));
+    if (slots.length === 0) {
       return null;
     }
     const picked = value.slice(11, 16);
-    const hour = hours.includes(picked) ? picked : hours[0];
-    return value.replace(/T\d{2}:\d{2}/, `T${hour}`);
+    if (slots.includes(picked)) {
+      return value;
+    }
+    const target = Number(picked.slice(0, 2)) * 60 + Number(picked.slice(3, 5));
+    let nearest = slots[0];
+    let distance = Number.POSITIVE_INFINITY;
+    for (const slot of slots) {
+      const minute = Number(slot.slice(0, 2)) * 60 + Number(slot.slice(3, 5));
+      const gap = Math.abs(minute - target);
+      if (gap < distance) {
+        nearest = slot;
+        distance = gap;
+      }
+    }
+    return value.replace(/T\d{2}:\d{2}/, `T${nearest}`);
   }
 
   private firstOpen(current: string): string | null {
@@ -284,7 +327,12 @@ interface TimePopover extends HTMLElement {
   dismiss: () => Promise<boolean>;
 }
 
+interface HourColumn extends HTMLElement {
+  value?: number | string;
+}
+
 interface TimeDatetime extends HTMLElement {
+  minuteValues?: string;
   confirm: (closeParent?: boolean) => Promise<void>;
   cancel: (closeParent?: boolean) => Promise<void>;
 }

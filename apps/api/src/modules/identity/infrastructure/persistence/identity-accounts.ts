@@ -48,14 +48,14 @@ export class IdentityAccounts {
     );
   }
 
-  async insert(username: string, password: string): Promise<AdminUserRecord> {
+  async insert(username: string, password: string, role: 'admin' | 'staff'): Promise<AdminUserRecord> {
     try {
       const rows = rowsOf<AdminUserRecord>(
         await this.dataSource.query(
           `INSERT INTO identity.users (id, username, password_hash, role, created_at)
-           VALUES ($1, $2, $3, 'admin', now())
+           VALUES ($1, $2, $3, $4, now())
            RETURNING id, username, role, created_at AS "createdAt"`,
-          [randomUUID(), username, await hashPassword(password)],
+          [randomUUID(), username, await hashPassword(password), role],
         ),
       );
       return rows[0];

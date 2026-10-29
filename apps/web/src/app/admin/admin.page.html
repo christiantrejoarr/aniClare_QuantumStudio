@@ -248,11 +248,14 @@
         </div>
       } @else {
         <div class="deck">
-        <p class="hint">Estas cuentas entran al panel. Quedan guardadas en la base del proyecto.</p>
+        <p class="hint">Una cuenta administrador puede crear, editar y eliminar usuarios. Sin esa marca, la cuenta solo puede crearlos. El usuario admin no se puede eliminar.</p>
         <article class="editor">
           <h2>Nueva cuenta</h2>
           <ion-input label="Usuario" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="newUsername()" (ionInput)="onNewUser('username', $event)"></ion-input>
           <ion-input label="Contraseña" labelPlacement="stacked" fill="outline" type="password" autocomplete="new-password" [value]="newPassword()" (ionInput)="onNewUser('password', $event)"></ion-input>
+          @if (administrator()) {
+            <ion-toggle [checked]="newAdministrator()" (ionChange)="onNewAdministrator($event)">Cuenta administrador</ion-toggle>
+          }
           @if (userMessage()) {
             <p class="message">{{ userMessage() }}</p>
           }
@@ -262,23 +265,29 @@
           <article class="card sheet" [class.editing]="user.editing">
             <div class="card-head">
               <h2>{{ user.username }}{{ isSelf(user) ? ' · tú' : '' }}</h2>
-              <div class="note-tools">
-                <button type="button" class="icon-button" (click)="toggleUser(user)" aria-label="Editar usuario" [attr.aria-expanded]="user.editing">
-                  <ion-icon name="pencil-outline"></ion-icon>
-                </button>
-                @if (!isSelf(user)) {
-                  <button type="button" class="icon-button" (click)="removeUser(user)" aria-label="Borrar usuario">
-                    <ion-icon name="trash-outline"></ion-icon>
+              @if (administrator()) {
+                <div class="note-tools">
+                  <button type="button" class="icon-button" (click)="toggleUser(user)" aria-label="Editar usuario" [attr.aria-expanded]="user.editing">
+                    <ion-icon name="pencil-outline"></ion-icon>
                   </button>
-                }
-              </div>
+                  @if (!isSelf(user) && !isProtected(user)) {
+                    <button type="button" class="icon-button" (click)="removeUser(user)" aria-label="Borrar usuario">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  }
+                </div>
+              }
             </div>
+            <p class="role">{{ roleLabel(user) }}</p>
+            @if (isProtected(user)) {
+              <p class="hint">Esta cuenta no se puede eliminar.</p>
+            }
             @if (user.message) {
               <p class="message">{{ user.message }}</p>
             }
             <div class="fold" [class.open]="user.editing">
               <div class="fold-body" [attr.inert]="user.editing ? null : ''">
-                <ion-input label="Usuario" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="user.username" (ionInput)="onUser(user, 'username', $event)"></ion-input>
+                <ion-input label="Usuario" labelPlacement="stacked" fill="outline" autocomplete="off" [readonly]="isProtected(user)" [value]="user.username" (ionInput)="onUser(user, 'username', $event)"></ion-input>
                 <ion-input label="Contraseña nueva" labelPlacement="stacked" fill="outline" type="password" autocomplete="new-password" [value]="user.password" (ionInput)="onUser(user, 'password', $event)"></ion-input>
                 <ion-button expand="block" (click)="saveUser(user)" [disabled]="user.saving">Guardar</ion-button>
               </div>

@@ -40,6 +40,7 @@ interface ServiceDraft {
 interface UserDraft {
   id: string;
   username: string;
+  role: 'admin' | 'staff';
   password: string;
   editing: boolean;
   saving: boolean;
@@ -144,6 +145,8 @@ export class AdminPage {
   readonly newNote = signal<ServiceDraft | null>(null);
   readonly newUsername = signal('');
   readonly newPassword = signal('');
+  readonly newAdministrator = signal(false);
+  readonly administrator = signal(false);
   readonly userMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly loading = signal(false);
@@ -198,6 +201,8 @@ export class AdminPage {
     this.cancelDelete();
     this.api.forget();
     this.authenticated.set(false);
+    this.administrator.set(false);
+    this.newAdministrator.set(false);
     this.loading.set(false);
     this.password.set('');
     this.reservations.set([]);
@@ -377,6 +382,11 @@ export class AdminPage {
     });
   }
 
+  onNewAdministrator(event: { detail: { checked: boolean } }): void {
+    this.newAdministrator.set(event.detail.checked);
+    this.userMessage.set(null);
+  }
+
   onNewUser(field: 'username' | 'password', event: { detail: { value?: string | number | null } }): void {
     const value = String(event.detail.value ?? '');
     if (field === 'username') {
@@ -394,12 +404,13 @@ export class AdminPage {
       this.userMessage.set('El usuario necesita al menos 2 caracteres y la contraseña 8.');
       return;
     }
-    this.api.createUser(username, password).subscribe({
+    this.api.createUser(username, password, this.administrator() && this.newAdministrator()).subscribe({
       next: (user) => {
         this.users.set([...this.users(), this.toUser(user)].sort((left, right) => left.username.localeCompare(right.username)));
         this.newUsername.set('');
         this.newPassword.set('');
-        this.userMessage.set('Usuario creado.');
+        this.newAdministrator.set(false);
+        this.userMessage.set(user.role === 'admin' ? 'Cuenta administrador creada.' : 'Usuario creado.');
       },
       error: (error: HttpErrorResponse) => this.failMessage(error, 'No pudimos crear el usuario.'),
     });
@@ -537,6 +548,14 @@ export class AdminPage {
 
   isSelf(draft: UserDraft): boolean {
     return draft.username === this.username().trim();
+  }
+
+  isProtected(draft: UserDraft): boolean {
+    return draft.username.trim().toLowerCase() === 'admin';
+  }
+
+  roleLabel(draft: UserDraft): string {
+    return draft.role === 'admin' ? 'Administrador' : 'Puede crear usuarios';
   }
 
   save(draft: ServiceDraft): void {
@@ -699,8 +718,11 @@ export class AdminPage {
       users: this.api.users(),
       therapists: this.api.therapists(),
       hours: this.api.workingHours(),
+      profile: this.api.profile(),
     }).subscribe({
-      next: ({ reservations, services, users, therapists, hours }) => {
+      next: ({ reservations, services, users, therapists, hours, profile }) => {
+        this.username.set(profile.username);
+        this.administrator.set(profile.administrator);
         this.reservations.set(reservations);
         this.drafts.set(services.map((service) => this.toDraft(service)));
         this.users.set(users.map((user) => this.toUser(user)));
@@ -739,6 +761,7 @@ export class AdminPage {
     return {
       id: user.id,
       username: user.username,
+      role: user.role,
       password: '',
       editing: false,
       saving: false,

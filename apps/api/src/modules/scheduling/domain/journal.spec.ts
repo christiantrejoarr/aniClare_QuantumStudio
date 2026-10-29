@@ -10,7 +10,7 @@ const journal: JournalRecord = {
 };
 
 describe('jornada', () => {
-  it('ofrece horas en punto dentro de la jornada y omite las ocupadas', () => {
+  it('ofrece cada minuto libre dentro de la jornada y omite los que se cruzan', () => {
     const day = '2026-11-02';
     const takenStart = atSpaTime(day, 11 * 60);
     const hours = openStarts(
@@ -20,7 +20,13 @@ describe('jornada', () => {
       atSpaTime(day, 9 * 60),
     );
 
-    expect(hours).toEqual(['10:00', '12:00', '13:00']);
+    expect(hours).toContain('10:00');
+    expect(hours).not.toContain('10:01');
+    expect(hours).not.toContain('11:59');
+    expect(hours).toContain('12:00');
+    expect(hours).toContain('12:59');
+    expect(hours).toContain('13:00');
+    expect(hours).not.toContain('13:01');
   });
 
   it('cierra el domingo si los fines de semana no están habilitados', () => {

@@ -29,10 +29,15 @@ export interface AdminSession {
   token: string;
 }
 
+export interface SessionProfile {
+  username: string;
+  administrator: boolean;
+}
+
 export interface AdminUser {
   id: string;
   username: string;
-  role: 'admin';
+  role: 'admin' | 'staff';
   createdAt: string;
 }
 
@@ -97,6 +102,10 @@ export class AdminApi {
     return this.http.post<AdminSession>(`${environment.apiUrl}/admin/session`, { username, password });
   }
 
+  profile(): Observable<SessionProfile> {
+    return this.http.get<SessionProfile>(`${environment.apiUrl}/admin/session`, { headers: this.headers() });
+  }
+
   reservations(): Observable<ReservationView[]> {
     return this.http.get<ReservationView[]>(`${environment.apiUrl}/admin/reservations`, { headers: this.headers() });
   }
@@ -135,8 +144,12 @@ export class AdminApi {
     return this.http.get<AdminUser[]>(`${environment.apiUrl}/admin/users`, { headers: this.headers() });
   }
 
-  createUser(username: string, password: string): Observable<AdminUser> {
-    return this.http.post<AdminUser>(`${environment.apiUrl}/admin/users`, { username, password }, { headers: this.headers() });
+  createUser(username: string, password: string, administrator: boolean): Observable<AdminUser> {
+    return this.http.post<AdminUser>(
+      `${environment.apiUrl}/admin/users`,
+      { username, password, administrator },
+      { headers: this.headers() },
+    );
   }
 
   reviseUser(id: string, username: string, password?: string): Observable<AdminUser> {

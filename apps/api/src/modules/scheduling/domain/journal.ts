@@ -90,7 +90,7 @@ export function slotFits(journal: JournalRecord, specials: SpecialDayRecord[], s
 
 export function openStarts(window: DayWindow, durationMinutes: number, taken: TakenSpan[], now: Date): string[] {
   const hours: string[] = [];
-  for (let minute = window.opensMinute; minute + durationMinutes <= window.closesMinute; minute += 60) {
+  for (let minute = window.opensMinute; minute + durationMinutes <= window.closesMinute; minute += 1) {
     const startsAt = atSpaTime(window.date, minute);
     const endsAt = new Date(startsAt.getTime() + durationMinutes * 60_000);
     if (startsAt <= now) {

@@ -45,7 +45,7 @@
             size="cover"
             presentation="date-time"
             hourCycle="h23"
-            minuteValues="0"
+            [minuteValues]="minuteValues()"
             [hourValues]="hourValues()"
             [isDateEnabled]="isDateEnabled"
             [min]="minStart"
@@ -59,7 +59,7 @@
       } @else {
         <p class="waiting">Consultando horarios libres...</p>
       }
-      <p class="waiting">Puedes elegir el mismo día si la hora sigue libre para esa terapeuta.</p>
+      <p class="waiting">Puedes elegir el mismo día si ese minuto sigue libre para esa terapeuta.</p>
     </div>
 
     <ion-button expand="block" type="submit" [disabled]="submitting() || !serviceId() || !therapistId() || !slotOpen()">

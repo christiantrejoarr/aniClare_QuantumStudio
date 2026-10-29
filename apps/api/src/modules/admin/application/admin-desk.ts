@@ -1,6 +1,6 @@
 import { BookingFacade, ReservationView } from '../../booking/public';
 import { CatalogFacade, RegisterServiceCommand, ReviseServiceCommand, ServiceView } from '../../catalog/public';
-import { AdminUserView, IdentityFacade } from '../../identity/public';
+import { AdminUserView, IdentityFacade, SessionProfile } from '../../identity/public';
 import {
   SchedulingFacade,
   SpecialDayCommand,
@@ -45,16 +45,20 @@ export class AdminDesk {
     return this.catalog.remove(serviceId);
   }
 
+  profile(actorUsername: string): Promise<SessionProfile> {
+    return this.identity.profile(actorUsername);
+  }
+
   listUsers(): Promise<AdminUserView[]> {
     return this.identity.listUsers();
   }
 
-  registerUser(username: string, password: string): Promise<AdminUserView> {
-    return this.identity.registerUser(username, password);
+  registerUser(username: string, password: string, administrator: boolean, actorUsername: string): Promise<AdminUserView> {
+    return this.identity.registerUser(username, password, administrator, actorUsername);
   }
 
-  reviseUser(id: string, username: string, password?: string): Promise<AdminUserView> {
-    return this.identity.reviseUser(id, username, password);
+  reviseUser(id: string, username: string, password: string | undefined, actorUsername: string): Promise<AdminUserView> {
+    return this.identity.reviseUser(id, username, password, actorUsername);
   }
 
   removeUser(id: string, actorUsername: string): Promise<void> {

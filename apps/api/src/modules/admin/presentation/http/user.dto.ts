@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UserCredentialsDto {
   @IsString()
@@ -10,6 +10,10 @@ export class UserCredentialsDto {
   @MinLength(8)
   @MaxLength(200)
   password!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  administrator?: boolean;
 }
 
 export class ReviseUserDto {

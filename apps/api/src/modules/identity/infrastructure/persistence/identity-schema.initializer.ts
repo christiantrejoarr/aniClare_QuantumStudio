@@ -16,8 +16,10 @@ export class IdentitySchemaInitializer implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const sql = readFileSync(join(__dirname, 'sql', '001_identity.sql'), 'utf8');
-    await this.dataSource.query(sql);
+    const schema = readFileSync(join(__dirname, 'sql', '001_identity.sql'), 'utf8');
+    const roles = readFileSync(join(__dirname, 'sql', '002_identity_roles.sql'), 'utf8');
+    await this.dataSource.query(schema);
+    await this.dataSource.query(roles);
     const username = (this.config.get<string>('ADMIN_USERNAME') || 'admin').trim() || 'admin';
     const password = this.config.get<string>('ADMIN_PASSWORD') || 'change-me-local-only';
     await this.accounts.ensureAdmin(username, password);

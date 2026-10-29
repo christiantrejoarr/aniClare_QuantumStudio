@@ -49,19 +49,24 @@ export class AdminController {
     return this.desk.removeService(id);
   }
 
+  @Get('session')
+  profile(@Req() request: Request & { adminUsername?: string }) {
+    return this.desk.profile(request.adminUsername ?? '');
+  }
+
   @Get('users')
   users() {
     return this.desk.listUsers();
   }
 
   @Post('users')
-  registerUser(@Body() body: UserCredentialsDto) {
-    return this.desk.registerUser(body.username, body.password);
+  registerUser(@Body() body: UserCredentialsDto, @Req() request: Request & { adminUsername?: string }) {
+    return this.desk.registerUser(body.username, body.password, body.administrator === true, request.adminUsername ?? '');
   }
 
   @Patch('users/:id')
-  reviseUser(@Param('id', ParseUUIDPipe) id: string, @Body() body: ReviseUserDto) {
-    return this.desk.reviseUser(id, body.username, body.password);
+  reviseUser(@Param('id', ParseUUIDPipe) id: string, @Body() body: ReviseUserDto, @Req() request: Request & { adminUsername?: string }) {
+    return this.desk.reviseUser(id, body.username, body.password, request.adminUsername ?? '');
   }
 
   @Delete('users/:id')
