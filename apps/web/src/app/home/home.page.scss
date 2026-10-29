@@ -5,34 +5,89 @@
 }
 
 .hero {
-  padding: 12px 0 8px;
+  padding: 4px 0 8px;
 }
 
-.eyebrow {
-  margin: 0 0 8px;
-  color: var(--ion-color-primary);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 4px;
+}
+
+.logo {
+  position: relative;
+  z-index: 1;
+  width: min(240px, 68vw);
+  height: auto;
+  animation: aniclare-float 4.6s ease-in-out infinite;
+  filter: drop-shadow(0 18px 24px rgb(47 78 107 / 18%));
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.orb-a {
+  width: 92px;
+  height: 92px;
+  background: radial-gradient(circle, #c6a36a, transparent 68%);
+  top: 18px;
+  left: 12%;
+  animation: aniclare-drift 7s ease-in-out infinite;
+}
+
+.orb-b {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgb(255 255 255 / 75%), transparent 70%);
+  right: 8%;
+  bottom: 10px;
+  animation: aniclare-drift 9s ease-in-out infinite reverse;
+}
+
+ion-toolbar {
+  overflow: visible;
+}
+
+.brand-mark {
+  height: 28px;
+  width: auto;
+  margin: 12px 0 12px 16px;
 }
 
 h1 {
   margin: 0;
-  color: var(--ion-text-color);
+  color: #2f4e6b;
   font-size: clamp(2.1rem, 6vw, 3.4rem);
   line-height: 1.05;
 }
 
+h1::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin-top: 14px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #a88855, #c6a36a 20%, #f4e4c4 50%, #c6a36a 80%, #a88855);
+  background-size: 220% 100%;
+  animation: aniclare-shimmer 2.8s linear infinite;
+}
+
 .hero p:last-of-type {
   max-width: 36rem;
-  color: #6d545b;
+  color: #2f4e6b;
   font-size: 1.05rem;
+  font-weight: 600;
   line-height: 1.5;
 }
 
 .message {
-  color: #6d545b;
+  color: #2f4e6b;
 }
 
 .catalog h2 {
@@ -47,7 +102,12 @@ h1 {
   margin-bottom: 12px;
   padding: 18px 18px 16px;
   border-radius: 18px;
-  background: #f8eeee;
+  background: var(--aniclare-blush);
+  transition: transform 0.35s ease;
+}
+
+.service-card:hover {
+  box-shadow: 0 18px 34px rgb(47 78 107 / 18%);
 }
 
 .service-card h3,
@@ -63,7 +123,7 @@ h1 {
 
 .service-card p,
 .deposit span {
-  color: #8a6670;
+  color: var(--aniclare-ink-soft);
   font-size: 0.92rem;
 }
 
@@ -73,16 +133,26 @@ h1 {
 
 .deposit strong {
   display: block;
-  color: var(--ion-color-primary);
+  color: var(--aniclare-navy);
   font-size: 1.15rem;
 }
 
-.admin-link {
-  margin: 8px 0 20px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: #8a6670;
-  font: inherit;
-  text-decoration: underline;
+.admin-button {
+  margin: 18px 0 28px;
+  font-weight: 700;
+  --background: #fbeff4;
+  --background-activated: #f3d5e2;
+  --background-hover: #f7e4ec;
+  --color: #2f4e6b;
+  --border-color: #2f4e6b;
+  --border-width: 2px;
+  --border-style: solid;
+  --border-radius: 16px;
+  --box-shadow: 0 10px 22px rgb(47 78 107 / 14%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  h1::after {
+    animation: none;
+  }
 }

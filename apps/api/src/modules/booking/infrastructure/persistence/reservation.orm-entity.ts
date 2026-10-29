@@ -43,6 +43,12 @@ export class ReservationOrmEntity {
   @Column({ name: 'payment_reference', type: 'text', nullable: true })
   paymentReference!: string | null;
 
+  @Column({ name: 'service_name', type: 'text', nullable: true })
+  serviceName!: string | null;
+
+  @Column({ name: 'price_cents', type: 'int', nullable: true })
+  priceCents!: number | null;
+
   @Column({ name: 'hold_expires_at', type: 'timestamptz', nullable: true })
   holdExpiresAt!: Date | null;
 

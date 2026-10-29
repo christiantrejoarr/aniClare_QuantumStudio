@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseFilters } from '@nestjs/common';
 import { CancelReservationUseCase } from '../../application/use-cases/cancel-reservation.use-case';
+import { ListAvailabilityUseCase } from '../../application/use-cases/list-availability.use-case';
 import { ConfirmReservationDepositUseCase } from '../../application/use-cases/confirm-reservation-deposit.use-case';
 import { CreateReservationUseCase } from '../../application/use-cases/create-reservation.use-case';
 import { GetReservationUseCase } from '../../application/use-cases/get-reservation.use-case';
@@ -18,7 +19,18 @@ export class BookingController {
     private readonly joinWaitlist: JoinWaitlistUseCase,
     private readonly getReservation: GetReservationUseCase,
     private readonly history: ListAppointmentHistoryUseCase,
+    private readonly availability: ListAvailabilityUseCase,
   ) {}
+
+  @Get('availability')
+  openHours(
+    @Query('therapistId', ParseUUIDPipe) therapistId: string,
+    @Query('serviceId', ParseUUIDPipe) serviceId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.availability.execute({ therapistId, serviceId, from, to });
+  }
 
   @Post('reservations')
   schedule(@Body() body: ScheduleReservationDto) {

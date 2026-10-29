@@ -10,13 +10,20 @@ export class CatalogModuleServiceCatalog implements ServiceCatalog {
 
   async findById(id: ServiceId): Promise<ServiceOffering | null> {
     const service = await this.catalog.findPublished(id.value);
-    if (!service) {
-      return null;
-    }
+    return service ? this.toOffering(id, service) : null;
+  }
+
+  async findRecorded(id: ServiceId): Promise<ServiceOffering | null> {
+    const service = await this.catalog.findAny(id.value);
+    return service ? this.toOffering(id, service) : null;
+  }
+
+  private toOffering(id: ServiceId, service: { name: string; durationMinutes: number; priceCents: number; depositCents: number }): ServiceOffering {
     return {
       id,
       name: service.name,
       durationMinutes: service.durationMinutes,
+      price: Money.mxn(service.priceCents),
       deposit: Money.mxn(service.depositCents),
     };
   }

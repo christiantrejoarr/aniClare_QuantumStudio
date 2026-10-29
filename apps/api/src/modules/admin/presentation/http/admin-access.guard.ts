@@ -1,28 +1,22 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { createHash, timingSafeEqual } from 'crypto';
 import { Request } from 'express';
+import { IdentityFacade, sessionUsername } from '../../../identity/public';
 
 @Injectable()
 export class AdminAccessGuard implements CanActivate {
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly identity: IdentityFacade) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const expected = this.config.get<string>('ADMIN_ACCESS_TOKEN') ?? '';
-    const header = context.switchToHttp().getRequest<Request>().header('authorization') ?? '';
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request & { adminUsername?: string }>();
+    const header = request.header('authorization') ?? '';
     const token = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : '';
-    if (!expected || !token || !sameSecret(token, expected)) {
+    if (!(await this.identity.sessionIsValid(token))) {
       throw new UnauthorizedException({
         code: 'ADMIN_UNAUTHORIZED',
-        message: 'La clave de administración no es válida.',
+        message: 'La sesión de administración no es válida.',
       });
     }
+    request.adminUsername = sessionUsername(token) ?? '';
     return true;
   }
-}
-
-function sameSecret(left: string, right: string): boolean {
-  const actual = createHash('sha256').update(left).digest();
-  const stored = createHash('sha256').update(right).digest();
-  return timingSafeEqual(actual, stored);
 }

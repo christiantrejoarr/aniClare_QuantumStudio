@@ -1,3 +1,4 @@
+import { keepBookedService } from '../keep-booked-service';
 import { DomainError } from '../../domain/errors/domain-error';
 import { reservationConfirmed } from '../../domain/events/booking-events';
 import { BookingRepository } from '../../domain/ports/booking-repository.port';
@@ -24,9 +25,9 @@ export class ConfirmReservationDepositUseCase {
     }
 
     reservation.confirmDeposit(now);
+    await keepBookedService(reservation, this.catalog, this.repository, now);
     await this.repository.saveReservation(reservation);
-    const offering = await this.catalog.findById(reservation.serviceId);
-    await this.events.publish([reservationConfirmed(reservation, offering?.name ?? null, now)]);
-    return toReservationView(reservation, offering?.name ?? null);
+    await this.events.publish([reservationConfirmed(reservation, reservation.serviceName || null, now)]);
+    return toReservationView(reservation);
   }
 }

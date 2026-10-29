@@ -19,6 +19,7 @@
         <article class="visit">
           <div>
             <h2>{{ reservation.serviceName }}</h2>
+            <p class="therapist">{{ therapistName(reservation.therapistId) }}</p>
             <p>{{ reservation.startsAt | date: 'EEE d MMM, HH:mm' }}</p>
           </div>
           <div class="meta">

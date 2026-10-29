@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonButton, IonContent, IonHeader, IonToolbar } from '@ionic/angular';
 
 import { CatalogApi } from '../core/catalog-api';
 import { formatPesos, SpaService } from '../core/catalog';
@@ -9,7 +9,7 @@ import { formatPesos, SpaService } from '../core/catalog';
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, IonButton],
+  imports: [IonHeader, IonToolbar, IonContent, IonButton],
 })
 export class HomePage {
   private readonly router = inject(Router);

@@ -5,7 +5,7 @@ import { CustomerId, ReservationId, ServiceId, TherapistId } from '../value-obje
 import { Money } from '../value-objects/money';
 import { TimeSlot } from '../value-objects/time-slot';
 
-export type ReservationStatus = 'pending_payment' | 'confirmed' | 'cancelled' | 'expired';
+export type ReservationStatus = 'pending_payment' | 'confirmed' | 'cancelled' | 'expired' | 'attended';
 
 export interface ScheduleReservationInput {
   id: ReservationId;
@@ -16,6 +16,8 @@ export interface ScheduleReservationInput {
   depositAmount: Money;
   policy: CancellationPolicy;
   paymentReference: string | null;
+  serviceName: string;
+  price: Money;
   now: Date;
   holdMinutes: number;
 }
@@ -32,6 +34,8 @@ export interface ReservationSnapshot {
   paymentReference: string | null;
   holdExpiresAt: Date | null;
   cancelledAt: Date | null;
+  serviceName: string;
+  price: Money;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,6 +64,8 @@ export class Reservation {
       deposit,
       policy: input.policy,
       paymentReference: confirmedWithoutPayment ? null : input.paymentReference,
+      serviceName: requireServiceName(input.serviceName),
+      price: input.price,
       holdExpiresAt: confirmedWithoutPayment
         ? null
         : new Date(input.now.getTime() + input.holdMinutes * 60_000),
@@ -113,6 +119,14 @@ export class Reservation {
     return this.props.holdExpiresAt;
   }
 
+  get serviceName(): string {
+    return this.props.serviceName;
+  }
+
+  get price(): Money {
+    return this.props.price;
+  }
+
   get cancelledAt(): Date | null {
     return this.props.cancelledAt;
   }
@@ -159,25 +173,39 @@ export class Reservation {
   }
 
   cancel(now: Date): { refundPercent: number } {
-    if (this.props.status === 'cancelled' || this.props.status === 'expired') {
+    if (this.props.status === 'cancelled' || this.props.status === 'expired' || this.props.status === 'attended') {
       throw new DomainError('RESERVATION_NOT_CANCELLABLE', 'Esta reserva ya no se puede cancelar.');
     }
     if (now >= this.props.slot.endsAt) {
       throw new DomainError('RESERVATION_NOT_CANCELLABLE', 'Esta reserva ya no se puede cancelar.');
     }
+    return this.finishCancellation(now, this.props.policy.refundPercentFor(this.props.slot.startsAt, now));
+  }
 
-    let refundPercent = 0;
-    if (this.props.deposit.status === 'paid') {
-      refundPercent = this.props.policy.refundPercentFor(this.props.slot.startsAt, now);
-      this.props.deposit =
-        refundPercent === 0 ? this.props.deposit.markForfeited() : this.props.deposit.markRefundDue();
+  rememberService(name: string, price: Money, now: Date): boolean {
+    if (this.props.serviceName) {
+      return false;
     }
+    this.props.serviceName = requireServiceName(name);
+    this.props.price = price;
+    this.props.updatedAt = now;
+    return true;
+  }
 
-    this.props.status = 'cancelled';
-    this.props.cancelledAt = now;
+  attend(now: Date): void {
+    if (this.props.status !== 'pending_payment' && this.props.status !== 'confirmed') {
+      throw new DomainError('RESERVATION_NOT_ATTENDABLE', 'Esta reserva ya no se puede atender.');
+    }
+    this.props.status = 'attended';
     this.props.holdExpiresAt = null;
     this.props.updatedAt = now;
-    return { refundPercent };
+  }
+
+  cancelFromDesk(now: Date): { refundPercent: number } {
+    if (this.props.status === 'cancelled' || this.props.status === 'attended') {
+      throw new DomainError('RESERVATION_NOT_CANCELLABLE', 'Esta reserva ya no se puede cancelar.');
+    }
+    return this.finishCancellation(now);
   }
 
   expireHold(now: Date): boolean {
@@ -191,4 +219,26 @@ export class Reservation {
     this.props.updatedAt = now;
     return true;
   }
+
+  private finishCancellation(now: Date, refundPercentWhenPaid = 0): { refundPercent: number } {
+    let refundPercent = 0;
+    if (this.props.deposit.status === 'paid') {
+      refundPercent = refundPercentWhenPaid;
+      this.props.deposit =
+        refundPercent === 0 ? this.props.deposit.markForfeited() : this.props.deposit.markRefundDue();
+    }
+    this.props.status = 'cancelled';
+    this.props.cancelledAt = now;
+    this.props.holdExpiresAt = null;
+    this.props.updatedAt = now;
+    return { refundPercent };
+  }
+}
+
+function requireServiceName(name: string): string {
+  const trimmed = name.trim();
+  if (trimmed.length < 2 || trimmed.length > 80) {
+    throw new DomainError('INVALID_SERVICE', 'El nombre del servicio en la reserva no es válido.');
+  }
+  return trimmed;
 }

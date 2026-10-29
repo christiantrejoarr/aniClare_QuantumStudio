@@ -1,4 +1,8 @@
 ion-tab-bar {
+  --background: #fbeff4;
   --border: 0;
-  box-shadow: 0 -8px 24px rgb(58 36 40 / 6%);
+  --color: #5c7590;
+  --color-selected: #2f4e6b;
+  background: #fbeff4;
+  box-shadow: 0 -10px 28px rgb(47 78 107 / 12%);
 }

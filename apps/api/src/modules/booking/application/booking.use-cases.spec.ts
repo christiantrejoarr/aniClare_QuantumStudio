@@ -7,6 +7,8 @@ import { Clock } from '../domain/ports/clock.port';
 import { DepositPayment } from '../domain/ports/deposit-payment.port';
 import { EventPublisher } from '../domain/ports/event-publisher.port';
 import { ServiceCatalog, ServiceOffering } from '../domain/ports/service-catalog.port';
+import { TherapistDirectory } from '../domain/ports/therapist-directory.port';
+import { WorkingHours } from '../domain/ports/working-hours.port';
 import { CustomerId, ServiceId, TherapistId } from '../domain/value-objects/identifiers';
 import { Money } from '../domain/value-objects/money';
 import { CancellationPolicy } from '../domain/value-objects/cancellation-policy';
@@ -33,11 +35,29 @@ class FakeClock implements Clock {
   }
 }
 
+class FakeTherapists implements TherapistDirectory {
+  async isBookable(id: TherapistId): Promise<boolean> {
+    return id.value === THERAPIST;
+  }
+}
+
+class FakeHours implements WorkingHours {
+  constructor(private readonly open = true) {}
+
+  async isOpen(): Promise<boolean> {
+    return this.open;
+  }
+}
+
 class FakeCatalog implements ServiceCatalog {
   constructor(private readonly offerings: ServiceOffering[]) {}
 
   async findById(id: ServiceId): Promise<ServiceOffering | null> {
     return this.offerings.find((item) => item.id.equals(id)) ?? null;
+  }
+
+  async findRecorded(id: ServiceId): Promise<ServiceOffering | null> {
+    return this.findById(id);
   }
 }
 
@@ -156,7 +176,7 @@ class InMemoryBookingRepository implements BookingRepository {
   }
 }
 
-function setup() {
+function setup(hoursOpen = true) {
   const clock = new FakeClock(new Date('2026-11-01T15:00:00.000Z'));
   const repository = new InMemoryBookingRepository();
   const events = new FakeEvents();
@@ -165,19 +185,23 @@ function setup() {
       id: ServiceId.from(MASAJE),
       name: 'Masaje relajante',
       durationMinutes: 60,
+      price: Money.mxn(85_000),
       deposit: Money.mxn(30_000),
     },
     {
       id: ServiceId.from(GRATIS),
       name: 'Consulta de cortesía',
       durationMinutes: 30,
+      price: Money.mxn(0),
       deposit: Money.mxn(0),
     },
   ]);
-  const create = new CreateReservationUseCase(catalog, new FakePolicy(), repository, new FakeDeposits(), events, clock);
+  const therapists = new FakeTherapists();
+  const hours = new FakeHours(hoursOpen);
+  const create = new CreateReservationUseCase(catalog, therapists, new FakePolicy(), repository, new FakeDeposits(), events, clock, hours);
   const confirm = new ConfirmReservationDepositUseCase(repository, catalog, events, clock);
   const cancel = new CancelReservationUseCase(repository, catalog, events, clock);
-  const waitlist = new JoinWaitlistUseCase(catalog, repository, events, clock);
+  const waitlist = new JoinWaitlistUseCase(catalog, therapists, repository, events, clock, hours);
   return { clock, events, create, confirm, cancel, waitlist };
 }
 
@@ -199,6 +223,19 @@ describe('Reservas', () => {
     expect(view.paymentReference).toMatch(/^dep_/);
     expect(view.endsAt).toBe('2026-11-03T19:00:00.000Z');
     expect(events.published.map((event) => event.eventName)).toEqual(['booking.reservation.scheduled']);
+  });
+
+  it('rechaza un horario fuera de la jornada', async () => {
+    const { create } = setup(false);
+
+    await expect(
+      create.execute({
+        customerId: CUSTOMER_A,
+        serviceId: MASAJE,
+        therapistId: THERAPIST,
+        startsAt,
+      }),
+    ).rejects.toMatchObject({ code: 'OUTSIDE_WORKING_HOURS' });
   });
 
   it('confirma de inmediato un servicio sin anticipo', async () => {

@@ -34,10 +34,232 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
+
+html {
+  color-scheme: only light;
+}
+
 h1,
 h2,
 .wordmark {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 560;
   letter-spacing: -0.03em;
+  color: #2f4e6b;
+}
+
+ion-toolbar {
+  --background: #e7a5c0;
+  --color: #2f4e6b;
+  color: #2f4e6b;
+}
+
+ion-content {
+  --background:
+    radial-gradient(circle at 12% 8%, rgb(198 163 106 / 35%), transparent 28%),
+    radial-gradient(circle at 90% 0%, rgb(255 255 255 / 35%), transparent 26%),
+    #e7a5c0;
+  --color: #2f4e6b;
+  color: #2f4e6b;
+}
+
+ion-tab-bar {
+  --background: #fbeff4;
+  --color: #5c7590;
+  --color-selected: #2f4e6b;
+  background: #fbeff4;
+  color: #2f4e6b;
+}
+
+h1,
+h2,
+h3,
+p,
+ion-label,
+ion-title {
+  color: #2f4e6b;
+}
+
+ion-button {
+  --border-radius: 16px;
+  --box-shadow: 0 12px 28px rgb(47 78 107 / 24%);
+}
+
+.service-card,
+.visit,
+.card,
+.editor,
+.confirmation {
+  border: 1px solid rgb(198 163 106 / 55%);
+  border-left: 4px solid var(--aniclare-gold);
+  box-shadow: 0 14px 28px rgb(47 78 107 / 10%);
+  animation: aniclare-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.service-card:nth-child(3),
+.visit:nth-child(2),
+.card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.service-card:nth-child(4),
+.visit:nth-child(3),
+.card:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.service-card:nth-child(5),
+.visit:nth-child(4),
+.card:nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+@keyframes aniclare-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aniclare-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-16px) rotate(2deg);
+  }
+}
+
+@keyframes aniclare-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(18px, -26px, 0) scale(1.12);
+  }
+}
+
+@keyframes aniclare-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 220% 50%;
+  }
+}
+
+ion-input input.native-input,
+ion-textarea textarea.native-textarea {
+  caret-color: #2f4e6b;
+  transition: background-color 99999s ease-out 0s !important;
+}
+
+.panel ion-input .input-outline-notch,
+.panel ion-textarea .input-outline-notch {
+  border-top: 1px solid #b3b3b3 !important;
+}
+
+.panel ion-input.has-focus .input-outline-notch,
+.panel ion-textarea.has-focus .input-outline-notch {
+  border-top-color: #2f4e6b !important;
+}
+
+.panel ion-input .label-text-wrapper,
+.panel ion-textarea .label-text-wrapper {
+  top: 8px !important;
+  height: auto !important;
+  color: #6b7c90 !important;
+  font-size: 12px !important;
+  transform: none !important;
+}
+
+.panel ion-input .native-input,
+.panel ion-textarea textarea.native-textarea {
+  padding-top: 18px !important;
+}
+
+ion-input input.native-input:-webkit-autofill,
+ion-input input.native-input:-webkit-autofill:hover,
+ion-input input.native-input:-webkit-autofill:focus,
+ion-input input.native-input:-webkit-autofill:active,
+ion-input input.native-input:autofill,
+ion-input input.native-input:autofill:hover,
+ion-input input.native-input:autofill:focus,
+ion-input input.native-input:autofill:active,
+ion-textarea textarea.native-textarea:-webkit-autofill,
+ion-textarea textarea.native-textarea:-webkit-autofill:hover,
+ion-textarea textarea.native-textarea:-webkit-autofill:focus,
+ion-textarea textarea.native-textarea:-webkit-autofill:active,
+ion-textarea textarea.native-textarea:autofill,
+ion-textarea textarea.native-textarea:autofill:hover,
+ion-textarea textarea.native-textarea:autofill:focus,
+ion-textarea textarea.native-textarea:autofill:active {
+  -webkit-text-fill-color: #2f4e6b !important;
+  caret-color: #2f4e6b;
+  background-color: #fff !important;
+  box-shadow: 0 0 0 1000px #fff inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  transition: background-color 99999s ease-out 0s !important;
+}
+
+ion-popover.aniclare-time {
+  --background: #fff;
+  --width: 280px;
+  --box-shadow: 0 16px 32px rgb(47 78 107 / 18%);
+}
+
+ion-popover.aniclare-time::part(content) {
+  border-radius: 16px;
+}
+
+ion-popover.aniclare-time .time-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 12px 12px;
+  background: #fff;
+}
+
+ion-popover.aniclare-time .time-cancel,
+ion-popover.aniclare-time .time-accept {
+  height: 40px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+ion-popover.aniclare-time .time-cancel {
+  border: 1px solid #2f4e6b;
+  background: #fff;
+  color: #2f4e6b;
+}
+
+ion-popover.aniclare-time .time-accept {
+  border: 0;
+  background: #2f4e6b;
+  color: #fbeff4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-card,
+  .visit,
+  .card,
+  .editor,
+  .confirmation,
+  .logo,
+  .orb {
+    animation: none;
+  }
 }

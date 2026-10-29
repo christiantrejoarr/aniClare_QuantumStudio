@@ -1,3 +1,4 @@
+import { keepBookedService } from '../keep-booked-service';
 import { BookingRepository } from '../../domain/ports/booking-repository.port';
 import { Clock } from '../../domain/ports/clock.port';
 import { ServiceCatalog } from '../../domain/ports/service-catalog.port';
@@ -14,16 +15,10 @@ export class ListAgendaUseCase {
     const now = this.clock.now();
     await this.repository.expirePendingHolds(now);
     const reservations = await this.repository.listReservations();
-    const names = new Map<string, string | null>();
     const views: ReservationView[] = [];
-
     for (const reservation of reservations) {
-      const serviceId = reservation.serviceId.value;
-      if (!names.has(serviceId)) {
-        const offering = await this.catalog.findById(reservation.serviceId);
-        names.set(serviceId, offering?.name ?? null);
-      }
-      views.push(toReservationView(reservation, names.get(serviceId) ?? null));
+      await keepBookedService(reservation, this.catalog, this.repository, now);
+      views.push(toReservationView(reservation));
     }
     return views;
   }

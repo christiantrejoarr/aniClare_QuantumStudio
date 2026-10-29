@@ -4,7 +4,7 @@
 }
 
 .message {
-  color: #6d545b;
+  color: var(--aniclare-navy);
   line-height: 1.5;
 }
 
@@ -15,7 +15,7 @@
   margin-bottom: 12px;
   padding: 16px 18px;
   border-radius: 18px;
-  background: #f8eeee;
+  background: var(--aniclare-blush);
 }
 
 .visit h2,
@@ -31,8 +31,14 @@
 
 .visit p,
 .meta span {
-  color: #8a6670;
+  color: var(--aniclare-ink-soft);
   font-size: 0.92rem;
+}
+
+.visit p.therapist {
+  margin-top: 4px;
+  color: var(--aniclare-navy);
+  font-weight: 700;
 }
 
 .meta {

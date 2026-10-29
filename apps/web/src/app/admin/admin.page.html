@@ -10,31 +10,52 @@
 <ion-content>
   @if (!authenticated()) {
     <section class="panel">
-      <p class="eyebrow">Spa</p>
-      <h1>Panel del spa</h1>
-      <p class="lead">Aquí ves todas las reservas y actualizas el precio de cada servicio.</p>
-      <ion-input
-        label="Clave de administración"
-        labelPlacement="stacked"
-        fill="outline"
-        type="password"
-        [value]="accessKey()"
-        (ionInput)="onKey($event)"
-      ></ion-input>
-      @if (errorMessage()) {
-        <p class="message">{{ errorMessage() }}</p>
-      }
-      <ion-button expand="block" (click)="enter()">Entrar</ion-button>
-      <button type="button" class="text-link" (click)="backHome()">Volver al sitio</button>
+      <article class="editor gate">
+        <p class="eyebrow">Spa</p>
+        <h1>Panel del spa</h1>
+        <p class="lead">Aquí ves las reservas, las notas de cada servicio, el equipo de terapeutas y las cuentas del panel.</p>
+        <ion-input
+          label="Usuario"
+          labelPlacement="stacked"
+          fill="outline"
+          type="text"
+          autocomplete="username"
+          [value]="username()"
+          (ionInput)="onUsername($event)"
+        ></ion-input>
+        <ion-input
+          label="Contraseña"
+          labelPlacement="stacked"
+          fill="outline"
+          type="password"
+          autocomplete="current-password"
+          [value]="password()"
+          (ionInput)="onPassword($event)"
+        ></ion-input>
+        @if (errorMessage()) {
+          <p class="message">{{ errorMessage() }}</p>
+        }
+        <ion-button expand="block" (click)="enter()" [disabled]="loading()">Entrar</ion-button>
+        <button type="button" class="text-link" (click)="backHome()">Volver al sitio</button>
+      </article>
     </section>
   } @else {
     <section class="panel">
-      <ion-segment [value]="section()" (ionChange)="onSection($event)">
+      <ion-segment scrollable [value]="section()" (ionChange)="onSection($event)">
         <ion-segment-button value="reservas">
           <ion-label>Reservas</ion-label>
         </ion-segment-button>
         <ion-segment-button value="servicios">
           <ion-label>Servicios</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="terapeutas">
+          <ion-label>Terapeutas</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="horas">
+          <ion-label>Horas laborales</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="usuarios">
+          <ion-label>Usuarios</ion-label>
         </ion-segment-button>
       </ion-segment>
 
@@ -43,40 +64,247 @@
       } @else if (loading()) {
         <p class="message">Cargando el panel...</p>
       } @else if (section() === 'reservas') {
+        <div class="deck">
         @if (reservations().length === 0) {
           <p class="message">Todavía no hay reservas.</p>
         }
         @for (reservation of reservations(); track reservation.reservationId) {
-          <article class="card">
-            <div>
-              <h2>{{ reservation.serviceName }}</h2>
-              <p>{{ reservation.startsAt | date: 'EEE d MMM, HH:mm' }} · {{ therapistName(reservation.therapistId) }}</p>
+          <article class="card reservation">
+            <div class="card-head">
+              <div class="card-copy">
+                <h2>{{ reservation.serviceName || 'Servicio retirado' }}</h2>
+                <p class="therapist">{{ therapistName(reservation.therapistId) }}</p>
+                <p>{{ reservation.startsAt | date: 'EEE d MMM, HH:mm' }}</p>
+                <p>{{ reservation.durationMinutes }} min · {{ reservation.priceCents === null ? 'Precio no registrado' : formatPesos(reservation.priceCents) }}</p>
+              </div>
+              <div class="meta">
+                <strong>{{ statusLabel[reservation.status] }}</strong>
+                <span>Anticipo {{ formatPesos(reservation.depositAmountCents) }}</span>
+              </div>
             </div>
-            <div class="meta">
-              <strong>{{ statusLabel[reservation.status] }}</strong>
-              <span>Anticipo {{ formatPesos(reservation.depositAmountCents) }}</span>
-            </div>
-          </article>
-        }
-      } @else {
-        <p class="hint">El cambio aplica a las citas nuevas. Las reservas ya hechas conservan su anticipo.</p>
-        @for (draft of drafts(); track draft.id) {
-          <article class="editor">
-            <ion-input label="Nombre" labelPlacement="stacked" fill="outline" [value]="draft.name" (ionInput)="onDraft(draft, 'name', $event)"></ion-input>
-            <ion-textarea label="Descripción" labelPlacement="stacked" fill="outline" [autoGrow]="true" [value]="draft.description" (ionInput)="onDraft(draft, 'description', $event)"></ion-textarea>
-            <div class="prices">
-              <ion-input label="Duración (min)" labelPlacement="stacked" fill="outline" type="number" inputmode="numeric" [value]="draft.durationMinutes" (ionInput)="onDraft(draft, 'durationMinutes', $event)"></ion-input>
-              <ion-input label="Precio (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="draft.pricePesos" (ionInput)="onDraft(draft, 'pricePesos', $event)"></ion-input>
-              <ion-input label="Anticipo (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="draft.depositPesos" (ionInput)="onDraft(draft, 'depositPesos', $event)"></ion-input>
-            </div>
-            <ion-toggle [checked]="draft.active" (ionChange)="onActive(draft, $event)">Visible en el sitio</ion-toggle>
-            @if (draft.message) {
-              <p class="message">{{ draft.message }}</p>
+            @if (canAttend(reservation) || canCancel(reservation)) {
+              <div class="actions">
+                @if (canAttend(reservation)) {
+                  <ion-button size="small" (click)="attend(reservation)" [disabled]="busyReservation() === reservation.reservationId">Atender</ion-button>
+                }
+                <ion-button size="small" fill="outline" (click)="cancelReservation(reservation)" [disabled]="busyReservation() === reservation.reservationId">Cancelar</ion-button>
+              </div>
             }
-            <ion-button expand="block" (click)="save(draft)" [disabled]="draft.saving">Guardar</ion-button>
           </article>
         }
+        </div>
+      } @else if (section() === 'servicios') {
+        <div class="deck">
+        <p class="hint">La nota es el servicio. Si cambias el precio, el nombre o la duración, las reservas ya hechas siguen con los datos de cuando se apartaron.</p>
+        <ion-button expand="block" fill="outline" (click)="startNote()">Nueva nota</ion-button>
+        @if (newNote(); as note) {
+          <article class="editor">
+            <h2>Nueva nota</h2>
+            <ion-input label="Nombre" labelPlacement="stacked" fill="outline" [value]="note.name" (ionInput)="onDraft(note, 'name', $event)"></ion-input>
+            <ion-textarea label="Nota" labelPlacement="stacked" fill="outline" [autoGrow]="true" [value]="note.description" (ionInput)="onDraft(note, 'description', $event)"></ion-textarea>
+            <div class="prices">
+              <ion-input label="Duración (min)" labelPlacement="stacked" fill="outline" type="number" inputmode="numeric" [value]="note.durationMinutes" (ionInput)="onDraft(note, 'durationMinutes', $event)"></ion-input>
+              <ion-input label="Precio (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="note.pricePesos" (ionInput)="onDraft(note, 'pricePesos', $event)"></ion-input>
+              <ion-input label="Anticipo (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="note.depositPesos" (ionInput)="onDraft(note, 'depositPesos', $event)"></ion-input>
+            </div>
+            <ion-toggle [checked]="note.active" (ionChange)="onActive(note, $event)">Visible en el sitio</ion-toggle>
+            @if (note.message) {
+              <p class="message">{{ note.message }}</p>
+            }
+            <ion-button expand="block" (click)="saveNew()" [disabled]="note.saving">Guardar nota</ion-button>
+            <button type="button" class="text-link" (click)="cancelNote()">Cancelar</button>
+          </article>
+        }
+        @for (draft of drafts(); track draft.id) {
+          <article class="card sheet" [class.editing]="draft.editing">
+            <div class="card-head">
+              <div class="card-copy">
+                <h2>{{ draft.name }}</h2>
+                <p class="note-body">{{ draft.description || 'Sin nota' }}</p>
+                <p>{{ draft.durationMinutes }} min · ${{ draft.pricePesos }} · anticipo ${{ draft.depositPesos }}</p>
+                <ion-toggle [checked]="draft.active" [disabled]="draft.saving" (ionChange)="onVisible(draft, $event)">Visible en el sitio</ion-toggle>
+                @if (draft.message) {
+                  <p class="message">{{ draft.message }}</p>
+                }
+              </div>
+              <div class="note-tools">
+                <button type="button" class="icon-button" (click)="toggleEdit(draft)" aria-label="Editar nota" [attr.aria-expanded]="draft.editing">
+                  <ion-icon name="pencil-outline"></ion-icon>
+                </button>
+                <button type="button" class="icon-button" (click)="removeService(draft)" aria-label="Borrar servicio" [disabled]="draft.saving">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            <div class="fold" [class.open]="draft.editing">
+              <div class="fold-body" [attr.inert]="draft.editing ? null : ''">
+                <ion-input label="Nombre" labelPlacement="stacked" fill="outline" [value]="draft.name" (ionInput)="onDraft(draft, 'name', $event)"></ion-input>
+                <ion-textarea label="Nota" labelPlacement="stacked" fill="outline" [autoGrow]="true" [value]="draft.description" (ionInput)="onDraft(draft, 'description', $event)"></ion-textarea>
+                <div class="prices">
+                  <ion-input label="Duración (min)" labelPlacement="stacked" fill="outline" type="number" inputmode="numeric" [value]="draft.durationMinutes" (ionInput)="onDraft(draft, 'durationMinutes', $event)"></ion-input>
+                  <ion-input label="Precio (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="draft.pricePesos" (ionInput)="onDraft(draft, 'pricePesos', $event)"></ion-input>
+                  <ion-input label="Anticipo (MXN)" labelPlacement="stacked" fill="outline" type="number" inputmode="decimal" [value]="draft.depositPesos" (ionInput)="onDraft(draft, 'depositPesos', $event)"></ion-input>
+                </div>
+                <ion-button expand="block" (click)="save(draft)" [disabled]="draft.saving">Guardar nota</ion-button>
+              </div>
+            </div>
+          </article>
+        }
+        </div>
+      } @else if (section() === 'terapeutas') {
+        <div class="deck">
+        <p class="hint">El alta queda guardada en la base. La reserva ofrece a quienes siguen en el equipo.</p>
+        <article class="editor">
+          <h2>Nueva terapeuta</h2>
+          <ion-input label="Nombre" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="newGivenName()" (ionInput)="onNewTherapist('givenName', $event)"></ion-input>
+          <ion-input label="Apellido" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="newFamilyName()" (ionInput)="onNewTherapist('familyName', $event)"></ion-input>
+          @if (therapistMessage()) {
+            <p class="message">{{ therapistMessage() }}</p>
+          }
+          <ion-button expand="block" (click)="createTherapist()">Dar de alta</ion-button>
+        </article>
+        @for (therapist of therapists(); track therapist.id) {
+          <article class="card sheet" [class.editing]="therapist.editing">
+            <div class="card-head">
+              <h2>{{ personName(therapist) }}</h2>
+              <div class="note-tools">
+                <button type="button" class="icon-button" (click)="toggleTherapist(therapist)" aria-label="Editar terapeuta" [attr.aria-expanded]="therapist.editing">
+                  <ion-icon name="pencil-outline"></ion-icon>
+                </button>
+                <button type="button" class="icon-button" (click)="removeTherapist(therapist)" aria-label="Dar de baja">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            @if (therapist.message) {
+              <p class="message">{{ therapist.message }}</p>
+            }
+            <div class="fold" [class.open]="therapist.editing">
+              <div class="fold-body" [attr.inert]="therapist.editing ? null : ''">
+                <ion-input label="Nombre" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="therapist.givenName" (ionInput)="onTherapist(therapist, 'givenName', $event)"></ion-input>
+                <ion-input label="Apellido" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="therapist.familyName" (ionInput)="onTherapist(therapist, 'familyName', $event)"></ion-input>
+                <ion-button expand="block" (click)="saveTherapist(therapist)" [disabled]="therapist.saving">Guardar</ion-button>
+              </div>
+            </div>
+          </article>
+        }
+        </div>
+      } @else if (section() === 'horas') {
+        <div class="deck">
+        @if (hours(); as journal) {
+          <article class="editor">
+            <h2>Jornada</h2>
+            <p class="hint">El cliente solo aparta dentro de estos días y horas. El mismo día sigue libre cuando la hora no está tomada.</p>
+            <div class="prices">
+              <ion-input label="Abre" labelPlacement="stacked" fill="outline" type="time" [value]="journal.opensAt" (ionInput)="onHoursTime('opensAt', $event)"></ion-input>
+              <ion-input label="Cierra" labelPlacement="stacked" fill="outline" type="time" [value]="journal.closesAt" (ionInput)="onHoursTime('closesAt', $event)"></ion-input>
+            </div>
+            <div class="week">
+              @for (day of weekdays; track day.key) {
+                <ion-toggle [checked]="journal[day.key]" (ionChange)="onHoursDay(day.key, $event)">{{ day.label }}</ion-toggle>
+              }
+            </div>
+            <ion-toggle [checked]="journal.allowWeekends" (ionChange)="onHoursDay('allowWeekends', $event)">Fines de semana</ion-toggle>
+            <ion-toggle [checked]="journal.allowHolidays" (ionChange)="onHoursDay('allowHolidays', $event)">Días festivos</ion-toggle>
+            <ion-toggle [checked]="journal.allowHalfDays" (ionChange)="onHoursDay('allowHalfDays', $event)">Medios días</ion-toggle>
+            @if (hoursMessage()) {
+              <p class="message">{{ hoursMessage() }}</p>
+            }
+            <ion-button expand="block" (click)="saveHours()" [disabled]="hoursSaving()">Guardar jornada</ion-button>
+          </article>
+          <article class="editor">
+            <h2>Días festivos</h2>
+            <p class="hint">Con el interruptor apagado, estas fechas quedan cerradas. Encendido, se atienden con el horario de la jornada.</p>
+            <ion-input label="Fecha" labelPlacement="stacked" fill="outline" type="date" [value]="holidayDate()" (ionInput)="onHolidayDate($event)"></ion-input>
+            <ion-button expand="block" fill="outline" (click)="addHoliday()">Agregar festivo</ion-button>
+            @for (day of specials('holiday'); track day.day) {
+              <div class="special">
+                <span>{{ day.day }}</span>
+                <ion-button fill="clear" (click)="askRemoveSpecial(day.day)" aria-label="Quitar festivo">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            }
+          </article>
+          <article class="editor">
+            <h2>Medios días</h2>
+            <p class="hint">Con el interruptor apagado, la fecha queda cerrada. Encendido, solo abre el horario corto, y solo si ese día de la semana está abierto.</p>
+            <ion-input label="Fecha" labelPlacement="stacked" fill="outline" type="date" [value]="halfDate()" (ionInput)="onHalfDate($event)"></ion-input>
+            <div class="prices">
+              <ion-input label="Abre" labelPlacement="stacked" fill="outline" type="time" [value]="halfOpens()" (ionInput)="onHalfTime('opens', $event)"></ion-input>
+              <ion-input label="Cierra" labelPlacement="stacked" fill="outline" type="time" [value]="halfCloses()" (ionInput)="onHalfTime('closes', $event)"></ion-input>
+            </div>
+            <ion-button expand="block" fill="outline" (click)="addHalfDay()">Agregar medio día</ion-button>
+            @for (day of specials('half_day'); track day.day) {
+              <div class="special">
+                <span>{{ day.day }} · {{ day.opensAt }}–{{ day.closesAt }}</span>
+                <ion-button fill="clear" (click)="askRemoveSpecial(day.day)" aria-label="Quitar medio día">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            }
+          </article>
+        }
+        </div>
+      } @else {
+        <div class="deck">
+        <p class="hint">Estas cuentas entran al panel. Quedan guardadas en la base del proyecto.</p>
+        <article class="editor">
+          <h2>Nueva cuenta</h2>
+          <ion-input label="Usuario" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="newUsername()" (ionInput)="onNewUser('username', $event)"></ion-input>
+          <ion-input label="Contraseña" labelPlacement="stacked" fill="outline" type="password" autocomplete="new-password" [value]="newPassword()" (ionInput)="onNewUser('password', $event)"></ion-input>
+          @if (userMessage()) {
+            <p class="message">{{ userMessage() }}</p>
+          }
+          <ion-button expand="block" (click)="createUser()">Crear usuario</ion-button>
+        </article>
+        @for (user of users(); track user.id) {
+          <article class="card sheet" [class.editing]="user.editing">
+            <div class="card-head">
+              <h2>{{ user.username }}{{ isSelf(user) ? ' · tú' : '' }}</h2>
+              <div class="note-tools">
+                <button type="button" class="icon-button" (click)="toggleUser(user)" aria-label="Editar usuario" [attr.aria-expanded]="user.editing">
+                  <ion-icon name="pencil-outline"></ion-icon>
+                </button>
+                @if (!isSelf(user)) {
+                  <button type="button" class="icon-button" (click)="removeUser(user)" aria-label="Borrar usuario">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                }
+              </div>
+            </div>
+            @if (user.message) {
+              <p class="message">{{ user.message }}</p>
+            }
+            <div class="fold" [class.open]="user.editing">
+              <div class="fold-body" [attr.inert]="user.editing ? null : ''">
+                <ion-input label="Usuario" labelPlacement="stacked" fill="outline" autocomplete="off" [value]="user.username" (ionInput)="onUser(user, 'username', $event)"></ion-input>
+                <ion-input label="Contraseña nueva" labelPlacement="stacked" fill="outline" type="password" autocomplete="new-password" [value]="user.password" (ionInput)="onUser(user, 'password', $event)"></ion-input>
+                <ion-button expand="block" (click)="saveUser(user)" [disabled]="user.saving">Guardar</ion-button>
+              </div>
+            </div>
+          </article>
+        }
+        </div>
       }
     </section>
   }
 </ion-content>
+@if (confirmOpen()) {
+  <div class="confirm-backdrop" (click)="cancelDelete()">
+    <div
+      class="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 id="confirm-title">Eliminar registro</h2>
+      <p>¿Está seguro que desea eliminar este registro?</p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel" (click)="cancelDelete()">Cancelar</button>
+        <button type="button" class="confirm-accept" (click)="acceptDelete()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+}

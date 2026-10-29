@@ -13,8 +13,9 @@ export interface ReservationView {
   startsAt: string;
   endsAt: string;
   durationMinutes: number;
-  status: 'pending_payment' | 'confirmed' | 'cancelled' | 'expired';
+  status: 'pending_payment' | 'confirmed' | 'cancelled' | 'expired' | 'attended';
   depositAmountCents: number;
+  priceCents: number | null;
   depositCurrency: 'MXN';
   depositStatus: 'pending' | 'paid' | 'waived' | 'refund_due' | 'forfeited';
   paymentReference: string | null;
@@ -38,4 +39,14 @@ export class BookingApi {
   history(customerId: string): Observable<ReservationView[]> {
     return this.http.get<ReservationView[]>(`${environment.apiUrl}/customers/${customerId}/reservations`);
   }
+
+  availability(therapistId: string, serviceId: string, from: string, to: string): Observable<OpenDay[]> {
+    const query = new URLSearchParams({ therapistId, serviceId, from, to });
+    return this.http.get<OpenDay[]>(`${environment.apiUrl}/availability?${query.toString()}`);
+  }
+}
+
+export interface OpenDay {
+  date: string;
+  hours: string[];
 }

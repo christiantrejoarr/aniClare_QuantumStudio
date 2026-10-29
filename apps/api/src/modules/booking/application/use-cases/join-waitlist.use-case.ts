@@ -5,6 +5,8 @@ import { BookingRepository } from '../../domain/ports/booking-repository.port';
 import { Clock } from '../../domain/ports/clock.port';
 import { EventPublisher } from '../../domain/ports/event-publisher.port';
 import { ServiceCatalog } from '../../domain/ports/service-catalog.port';
+import { TherapistDirectory } from '../../domain/ports/therapist-directory.port';
+import { WorkingHours } from '../../domain/ports/working-hours.port';
 import { CustomerId, ServiceId, TherapistId, WaitlistEntryId } from '../../domain/value-objects/identifiers';
 import { TimeSlot } from '../../domain/value-objects/time-slot';
 import { WaitlistView, toWaitlistView } from '../reservation-view';
@@ -19,9 +21,11 @@ export interface JoinWaitlistCommand {
 export class JoinWaitlistUseCase {
   constructor(
     private readonly catalog: ServiceCatalog,
+    private readonly therapists: TherapistDirectory,
     private readonly repository: BookingRepository,
     private readonly events: EventPublisher,
     private readonly clock: Clock,
+    private readonly hours: WorkingHours,
   ) {}
 
   async execute(command: JoinWaitlistCommand): Promise<WaitlistView> {
@@ -34,7 +38,13 @@ export class JoinWaitlistUseCase {
 
     const customerId = CustomerId.from(command.customerId);
     const therapistId = TherapistId.from(command.therapistId);
+    if (!(await this.therapists.isBookable(therapistId))) {
+      throw new DomainError('UNKNOWN_THERAPIST', 'Esa terapeuta no está en el equipo.');
+    }
     const slot = TimeSlot.fromStartAndDuration(command.startsAt, offering.durationMinutes);
+    if (!(await this.hours.isOpen(slot))) {
+      throw new DomainError('OUTSIDE_WORKING_HOURS', 'Ese horario está fuera de la jornada.');
+    }
 
     await this.repository.expirePendingHolds(now);
     const overlap = await this.repository.findActiveOverlap(therapistId, slot, now);

@@ -20,6 +20,8 @@ function schedule(startsAt: Date, now: Date, depositCents = 30_000): Reservation
     depositAmount: Money.mxn(depositCents),
     policy,
     paymentReference: depositCents === 0 ? null : 'dep_test',
+    serviceName: 'Masaje relajante',
+    price: Money.mxn(85_000),
     now,
     holdMinutes: 10,
   });
@@ -68,5 +70,18 @@ describe('Reservation', () => {
     expect(() => reservation.confirmDeposit(new Date('2026-11-01T15:11:00.000Z'))).toThrow(
       expect.objectContaining({ code: 'HOLD_EXPIRED' }),
     );
+  });
+
+  it('atiende la cita y conserva el nombre aunque después se intente recordar otro', () => {
+    const reservation = schedule(new Date('2026-11-03T18:00:00.000Z'), now);
+    reservation.confirmDeposit(now);
+
+    expect(reservation.rememberService('Otro nombre', Money.mxn(10), now)).toBe(false);
+    reservation.attend(now);
+
+    expect(reservation.status).toBe('attended');
+    expect(reservation.serviceName).toBe('Masaje relajante');
+    expect(reservation.price.amountCents).toBe(85_000);
+    expect(() => reservation.attend(now)).toThrow(DomainError);
   });
 });

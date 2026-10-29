@@ -1,3 +1,4 @@
+import { keepBookedService } from '../keep-booked-service';
 import { DomainError } from '../../domain/errors/domain-error';
 import { BookingRepository } from '../../domain/ports/booking-repository.port';
 import { Clock } from '../../domain/ports/clock.port';
@@ -19,7 +20,7 @@ export class GetReservationUseCase {
     if (!reservation) {
       throw new DomainError('RESERVATION_NOT_FOUND', 'No encontramos esa reserva.');
     }
-    const offering = await this.catalog.findById(reservation.serviceId);
-    return toReservationView(reservation, offering?.name ?? null);
+    await keepBookedService(reservation, this.catalog, this.repository, now);
+    return toReservationView(reservation);
   }
 }

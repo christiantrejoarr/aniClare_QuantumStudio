@@ -15,6 +15,7 @@ export interface ReservationView {
   durationMinutes: number;
   status: ReservationStatus;
   depositAmountCents: number;
+  priceCents: number | null;
   depositCurrency: 'MXN';
   depositStatus: DepositStatus;
   paymentReference: string | null;
@@ -40,18 +41,19 @@ export interface WaitlistView {
   createdAt: string;
 }
 
-export function toReservationView(reservation: Reservation, serviceName: string | null): ReservationView {
+export function toReservationView(reservation: Reservation): ReservationView {
   return {
     reservationId: reservation.id.value,
     customerId: reservation.customerId.value,
     serviceId: reservation.serviceId.value,
-    serviceName,
+    serviceName: reservation.serviceName || null,
     therapistId: reservation.therapistId.value,
     startsAt: reservation.slot.startsAt.toISOString(),
     endsAt: reservation.slot.endsAt.toISOString(),
     durationMinutes: reservation.slot.durationMinutes,
     status: reservation.status,
     depositAmountCents: reservation.deposit.amount.amountCents,
+    priceCents: reservation.serviceName ? reservation.price.amountCents : null,
     depositCurrency: reservation.deposit.amount.currency,
     depositStatus: reservation.deposit.status,
     paymentReference: reservation.paymentReference,

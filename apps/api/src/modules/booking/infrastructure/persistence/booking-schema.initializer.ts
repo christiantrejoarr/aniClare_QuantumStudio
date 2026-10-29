@@ -10,8 +10,9 @@ export class BookingSchemaInitializer implements OnModuleInit {
   constructor(private readonly dataSource: DataSource) {}
 
   async onModuleInit(): Promise<void> {
-    const sql = readFileSync(join(__dirname, 'sql', '001_booking.sql'), 'utf8');
-    await this.dataSource.query(sql);
+    const folder = join(__dirname, 'sql');
+    await this.dataSource.query(readFileSync(join(folder, '001_booking.sql'), 'utf8'));
+    await this.dataSource.query(readFileSync(join(folder, '002_booking_snapshot.sql'), 'utf8'));
     this.logger.log('Schema booking listo');
   }
 }

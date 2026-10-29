@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ListPublishedServicesUseCase } from './application/use-cases/list-published-services.use-case';
 import { ListManagedServicesUseCase } from './application/use-cases/list-managed-services.use-case';
 import { GetPublishedServiceUseCase } from './application/use-cases/get-published-service.use-case';
+import { GetServiceUseCase } from './application/use-cases/get-service.use-case';
+import { RegisterServiceUseCase } from './application/use-cases/register-service.use-case';
+import { RemoveServiceUseCase } from './application/use-cases/remove-service.use-case';
 import { ReviseServiceUseCase } from './application/use-cases/revise-service.use-case';
 import { SERVICE_REPOSITORY, ServiceRepository } from './domain/ports/service-repository.port';
 import { CatalogSchemaInitializer } from './infrastructure/persistence/catalog-schema.initializer';
@@ -29,6 +32,11 @@ import { CatalogFacade } from './public/catalog-facade';
       inject: [SERVICE_REPOSITORY],
     },
     {
+      provide: GetServiceUseCase,
+      useFactory: (services: ServiceRepository) => new GetServiceUseCase(services),
+      inject: [SERVICE_REPOSITORY],
+    },
+    {
       provide: ListManagedServicesUseCase,
       useFactory: (services: ServiceRepository) => new ListManagedServicesUseCase(services),
       inject: [SERVICE_REPOSITORY],
@@ -36,6 +44,16 @@ import { CatalogFacade } from './public/catalog-facade';
     {
       provide: ReviseServiceUseCase,
       useFactory: (services: ServiceRepository) => new ReviseServiceUseCase(services),
+      inject: [SERVICE_REPOSITORY],
+    },
+    {
+      provide: RegisterServiceUseCase,
+      useFactory: (services: ServiceRepository) => new RegisterServiceUseCase(services),
+      inject: [SERVICE_REPOSITORY],
+    },
+    {
+      provide: RemoveServiceUseCase,
+      useFactory: (services: ServiceRepository) => new RemoveServiceUseCase(services),
       inject: [SERVICE_REPOSITORY],
     },
     CatalogFacade,

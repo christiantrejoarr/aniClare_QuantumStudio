@@ -21,6 +21,8 @@ export function reservationToOrm(reservation: Reservation): ReservationOrmEntity
   row.cancellationNoticeHours = reservation.policy.noticeHours;
   row.cancellationLateRefundPercent = reservation.policy.lateRefundPercent;
   row.paymentReference = reservation.paymentReference;
+  row.serviceName = reservation.serviceName || null;
+  row.priceCents = reservation.serviceName ? reservation.price.amountCents : null;
   row.holdExpiresAt = reservation.holdExpiresAt;
   row.cancelledAt = reservation.cancelledAt;
   row.createdAt = reservation.createdAt;
@@ -39,6 +41,8 @@ export function reservationToDomain(row: ReservationOrmEntity): Reservation {
     deposit: Deposit.restore(Money.mxn(row.depositAmountCents), row.depositStatus),
     policy: CancellationPolicy.create(row.cancellationNoticeHours, row.cancellationLateRefundPercent),
     paymentReference: row.paymentReference,
+    serviceName: row.serviceName ?? '',
+    price: Money.mxn(row.priceCents ?? 0),
     holdExpiresAt: row.holdExpiresAt ? new Date(row.holdExpiresAt) : null,
     cancelledAt: row.cancelledAt ? new Date(row.cancelledAt) : null,
     createdAt: new Date(row.createdAt),

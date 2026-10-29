@@ -19,6 +19,10 @@ export class TypeOrmServiceRepository implements ServiceRepository {
     return row ? serviceToDomain(row) : null;
   }
 
+  async delete(id: ServiceId): Promise<void> {
+    await this.dataSource.getRepository(ServiceOrmEntity).delete({ id: id.value });
+  }
+
   async listActive(): Promise<Service[]> {
     const rows = await this.dataSource.getRepository(ServiceOrmEntity).find({
       where: { active: true },

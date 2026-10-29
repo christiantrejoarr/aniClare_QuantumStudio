@@ -21,15 +21,50 @@ h1 {
 .lead,
 .hint,
 .message {
-  color: #6d545b;
+  color: var(--aniclare-navy);
   line-height: 1.5;
 }
 
 ion-input,
 ion-textarea,
-ion-segment,
 ion-toggle {
   margin-top: 14px;
+  --background: #fff;
+}
+
+.panel ion-input,
+.panel ion-textarea {
+  --background: #fff;
+  --border-color: #b3b3b3;
+  --border-radius: 12px;
+  --border-width: 1px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --highlight-color-focused: #2f4e6b;
+  border-radius: 12px;
+}
+
+.gate {
+  padding: 22px 22px 18px;
+}
+
+.gate h1 {
+  font-size: clamp(1.8rem, 4vw, 2.2rem);
+}
+
+ion-segment {
+  margin-top: 14px;
+  --background: transparent;
+}
+
+ion-segment-button {
+  --background: transparent;
+  --background-checked: transparent;
+  --background-hover: transparent;
+  --background-focused: transparent;
+  --indicator-color: #2f4e6b;
+  --color: #2f4e6b;
+  --color-checked: #2f4e6b;
 }
 
 ion-button {
@@ -42,7 +77,7 @@ ion-button {
   padding: 0;
   border: 0;
   background: none;
-  color: #8a6670;
+  color: var(--aniclare-navy);
   font: inherit;
   text-decoration: underline;
 }
@@ -52,13 +87,111 @@ ion-button {
   margin-top: 12px;
   padding: 16px 18px;
   border-radius: 18px;
-  background: #f8eeee;
+  background: #fff;
 }
+
+.deck > * {
+  animation: aniclare-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.deck > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.deck > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.deck > *:nth-child(4) {
+  animation-delay: 0.18s;
+}
+
+.deck > *:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+.deck > *:nth-child(n + 6) {
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck > * {
+    animation: none;
+  }
+
+  .fold,
+  .fold-body {
+    transition: none;
+  }
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.card-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  transition: grid-template-rows 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fold.open {
+  grid-template-rows: 1fr;
+}
+
+.fold-body {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fold.open .fold-body {
+  opacity: 1;
+  transform: none;
+}
+
+.fold-body ion-input,
+.fold-body ion-textarea,
+.fold-body ion-button,
+.editor ion-input,
+.editor ion-textarea,
+.editor ion-button {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
 
 .card {
   display: flex;
   justify-content: space-between;
   gap: 16px;
+}
+
+.card.sheet,
+.card.reservation {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.reservation .actions {
+  width: 100%;
+  margin-top: 14px;
 }
 
 .card h2,
@@ -74,17 +207,151 @@ ion-button {
 
 .card p,
 .meta span {
-  color: #8a6670;
+  color: var(--aniclare-navy);
   font-size: 0.92rem;
+}
+
+.card p.therapist {
+  margin-top: 4px;
+  font-weight: 700;
 }
 
 .meta {
   text-align: right;
 }
 
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.actions ion-button {
+  margin-top: 0;
+}
+
+.editor h2 {
+  margin: 0;
+}
+
+.note-tools {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.card ion-toggle {
+  margin-top: 12px;
+}
+
+.note-body {
+  margin: 10px 0 0;
+  white-space: pre-wrap;
+}
+
+.note-meta {
+  margin: 8px 0 0;
+  color: var(--aniclare-ink-soft, #5c7590);
+  font-size: 0.92rem;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: #fbeff4;
+  color: var(--aniclare-navy, #2f4e6b);
+  font-size: 1.2rem;
+}
+
+.icon-button ion-icon {
+  font-size: 1.25rem;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(47, 78, 107, 0.46);
+}
+
+.confirm-dialog {
+  width: min(420px, 100%);
+  padding: 22px 22px 18px;
+  border-radius: 18px;
+  border-left: 4px solid var(--aniclare-gold);
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(47, 78, 107, 0.2);
+}
+
+.confirm-dialog h2 {
+  margin: 0;
+  color: var(--aniclare-navy);
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-size: 1.2rem;
+}
+
+.confirm-dialog p {
+  margin: 12px 0 0;
+  color: var(--aniclare-navy);
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confirm-cancel,
+.confirm-accept {
+  min-width: 112px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirm-cancel {
+  border: 1px solid var(--aniclare-navy);
+  background: #fff;
+  color: var(--aniclare-navy);
+}
+
+.confirm-accept {
+  border: 0;
+  background: var(--aniclare-navy);
+  color: #fbeff4;
+}
+
 .meta strong {
   display: block;
   color: var(--ion-color-primary);
+}
+
+.week {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 8px 0 12px;
+}
+
+.special {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
 }
 
 .prices {
@@ -102,7 +369,9 @@ ion-button {
     flex-direction: column;
   }
 
-  .meta {
+  .meta,
+  .actions {
     text-align: left;
+    justify-content: flex-start;
   }
 }

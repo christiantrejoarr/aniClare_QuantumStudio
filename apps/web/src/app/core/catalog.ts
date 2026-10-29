@@ -10,13 +10,10 @@ export interface SpaService {
 
 export interface SpaTherapist {
   id: string;
+  givenName: string;
+  familyName: string;
   name: string;
 }
-
-export const therapists: SpaTherapist[] = [
-  { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', name: 'Ana' },
-  { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', name: 'Lucía' },
-];
 
 export function formatPesos(cents: number): string {
   return new Intl.NumberFormat('es-MX', {

@@ -1,12 +1,16 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title class="wordmark">AniClare</ion-title>
+    <img class="brand-mark" slot="start" src="assets/brand/aniclare-wordmark.png" alt="AniClare" />
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <section class="hero">
-    <p class="eyebrow">Spa</p>
+    <div class="stage">
+      <span class="orb orb-a"></span>
+      <span class="orb orb-b"></span>
+      <img class="logo" src="assets/brand/aniclare-logo.png" alt="Logotipo de AniClare Spa" />
+    </div>
     <h1>Tu siguiente cita, en un minuto.</h1>
     <p>Elige servicio, terapeuta y horario. El anticipo aparta el lugar.</p>
     <ion-button expand="block" (click)="reserve()">Reservar</ion-button>
@@ -19,8 +23,8 @@
     } @else if (services().length === 0) {
       <p class="message">Cargando servicios...</p>
     }
-    @for (service of services(); track service.id) {
-      <article class="service-card">
+    @for (service of services(); track service.id; let i = $index) {
+      <article class="service-card" [style.animation-delay.ms]="120 + i * 90">
         <div>
           <h3>{{ service.name }}</h3>
           <p>{{ service.durationMinutes }} min · anticipo {{ formatPesos(service.depositCents) }}</p>
@@ -31,6 +35,6 @@
         </div>
       </article>
     }
-    <button type="button" class="admin-link" (click)="openAdmin()">Administración</button>
+    <ion-button class="admin-button" expand="block" fill="solid" (click)="openAdmin()">Administración</ion-button>
   </section>
 </ion-content>

@@ -12,7 +12,7 @@ export class AppComponent {
   constructor() {
     if (Capacitor.isNativePlatform()) {
       void StatusBar.setStyle({ style: Style.Light });
-      void StatusBar.setBackgroundColor({ color: '#fbf6f6' });
+      void StatusBar.setBackgroundColor({ color: '#e7a5c0' });
     }
   }
 }

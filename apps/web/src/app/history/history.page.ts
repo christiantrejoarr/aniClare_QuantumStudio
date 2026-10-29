@@ -4,14 +4,16 @@ import { Component, inject, signal } from '@angular/core';
 import { IonContent, IonHeader, IonRefresher, IonRefresherContent, IonTitle, IonToolbar } from '@ionic/angular';
 
 import { BookingApi, ReservationView } from '../core/booking-api';
-import { formatPesos } from '../core/catalog';
+import { formatPesos, SpaTherapist } from '../core/catalog';
 import { guestCustomerId } from '../core/guest-id';
+import { TherapistApi } from '../core/therapist-api';
 
 const statusLabel: Record<ReservationView['status'], string> = {
   pending_payment: 'Esperando anticipo',
   confirmed: 'Confirmada',
   cancelled: 'Cancelada',
   expired: 'Apartado vencido',
+  attended: 'Atendida',
 };
 
 @Component({
@@ -22,13 +24,22 @@ const statusLabel: Record<ReservationView['status'], string> = {
 })
 export class HistoryPage {
   private readonly api = inject(BookingApi);
+  private readonly therapistApi = inject(TherapistApi);
   readonly formatPesos = formatPesos;
   readonly statusLabel = statusLabel;
   readonly reservations = signal<ReservationView[]>([]);
+  readonly therapists = signal<SpaTherapist[]>([]);
   readonly errorMessage = signal<string | null>(null);
 
   ionViewWillEnter(): void {
+    this.therapistApi.list().subscribe({
+      next: (therapists) => this.therapists.set(therapists),
+    });
     this.load();
+  }
+
+  therapistName(id: string): string {
+    return this.therapists().find((therapist) => therapist.id === id)?.name ?? 'Terapeuta';
   }
 
   load(event?: CustomEvent): void {

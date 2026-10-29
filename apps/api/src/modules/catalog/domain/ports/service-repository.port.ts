@@ -6,6 +6,7 @@ export interface ServiceRepository {
   findById(id: ServiceId): Promise<Service | null>;
   listActive(): Promise<Service[]>;
   listAll(): Promise<Service[]>;
+  delete(id: ServiceId): Promise<void>;
 }
 
 export const SERVICE_REPOSITORY = Symbol('SERVICE_REPOSITORY');

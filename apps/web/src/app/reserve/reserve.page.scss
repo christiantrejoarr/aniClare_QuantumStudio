@@ -5,28 +5,37 @@
 }
 
 ion-item {
-  --background: #fffafb;
+  --background: var(--aniclare-blush);
   margin-bottom: 12px;
   border-radius: 16px;
 }
 
 .when {
+  width: 100%;
   margin: 8px 0 18px;
   padding: 8px 12px 12px;
   border-radius: 16px;
-  background: #fffafb;
+  background: var(--aniclare-blush);
 }
 
 .when ion-label {
   display: block;
   margin: 8px 4px;
-  color: #8a6670;
+  color: var(--aniclare-ink-soft);
   font-size: 0.85rem;
 }
 
 ion-datetime {
   width: 100%;
+  max-width: none;
   border-radius: 12px;
+  --background: #fff;
+}
+
+.waiting {
+  margin: 8px 4px 0;
+  color: var(--aniclare-ink-soft);
+  font-size: 0.85rem;
 }
 
 ion-note {
@@ -37,7 +46,7 @@ ion-note {
 .confirmation {
   padding: 18px;
   border-radius: 18px;
-  background: #f8eeee;
+  background: var(--aniclare-blush);
 }
 
 .eyebrow {
@@ -52,4 +61,9 @@ ion-note {
 .confirmation h2,
 .confirmation p {
   margin: 6px 0 0;
+}
+
+.confirmation p.therapist {
+  color: var(--aniclare-navy);
+  font-weight: 700;
 }

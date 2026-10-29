@@ -4,6 +4,8 @@ import { HealthController } from './health.controller';
 import { AdminModule } from './modules/admin/admin.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { IdentityModule } from './modules/identity/identity.module';
+import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { DatabaseModule } from './shared/infrastructure/database/database.module';
 
 @Module({
@@ -15,7 +17,9 @@ import { DatabaseModule } from './shared/infrastructure/database/database.module
     }),
     DatabaseModule,
     CatalogModule,
+    SchedulingModule,
     BookingModule,
+    IdentityModule,
     AdminModule,
   ],
   controllers: [HealthController],

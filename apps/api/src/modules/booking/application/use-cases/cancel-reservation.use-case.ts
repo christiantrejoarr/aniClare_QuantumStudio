@@ -1,3 +1,4 @@
+import { keepBookedService } from '../keep-booked-service';
 import { DomainError } from '../../domain/errors/domain-error';
 import { reservationCancelled, waitlistSpotOpened } from '../../domain/events/booking-events';
 import { DomainEvent } from '../../domain/events/domain-event';
@@ -23,6 +24,7 @@ export class CancelReservationUseCase {
       throw new DomainError('RESERVATION_NOT_FOUND', 'No encontramos esa reserva.');
     }
 
+    await keepBookedService(reservation, this.catalog, this.repository, now);
     const { refundPercent } = reservation.cancel(now);
     const next = reservation.slot.isInThePast(now)
       ? null
@@ -32,9 +34,8 @@ export class CancelReservationUseCase {
     }
 
     await this.repository.saveReservationWithWaitlist(reservation, next);
-    const offering = await this.catalog.findById(reservation.serviceId);
     const published: DomainEvent[] = [
-      reservationCancelled(reservation, offering?.name ?? null, refundPercent, now),
+      reservationCancelled(reservation, reservation.serviceName || null, refundPercent, now),
     ];
     if (next) {
       published.push(waitlistSpotOpened(next, now));
@@ -42,7 +43,7 @@ export class CancelReservationUseCase {
     await this.events.publish(published);
 
     return {
-      ...toReservationView(reservation, offering?.name ?? null),
+      ...toReservationView(reservation),
       refundPercent,
       waitlistNotifiedEntryId: next?.id.value ?? null,
     };

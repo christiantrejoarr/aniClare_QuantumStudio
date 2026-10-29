@@ -7,6 +7,8 @@ import { Clock } from '../../domain/ports/clock.port';
 import { DepositPayment } from '../../domain/ports/deposit-payment.port';
 import { EventPublisher } from '../../domain/ports/event-publisher.port';
 import { ServiceCatalog } from '../../domain/ports/service-catalog.port';
+import { TherapistDirectory } from '../../domain/ports/therapist-directory.port';
+import { WorkingHours } from '../../domain/ports/working-hours.port';
 import { CustomerId, ReservationId, ServiceId, TherapistId } from '../../domain/value-objects/identifiers';
 import { TimeSlot } from '../../domain/value-objects/time-slot';
 import { ReservationView, toReservationView } from '../reservation-view';
@@ -21,11 +23,13 @@ export interface ScheduleReservationCommand {
 export class CreateReservationUseCase {
   constructor(
     private readonly catalog: ServiceCatalog,
+    private readonly therapists: TherapistDirectory,
     private readonly policies: BookingPolicy,
     private readonly repository: BookingRepository,
     private readonly deposits: DepositPayment,
     private readonly events: EventPublisher,
     private readonly clock: Clock,
+    private readonly hours: WorkingHours,
   ) {}
 
   async execute(command: ScheduleReservationCommand): Promise<ReservationView> {
@@ -38,7 +42,13 @@ export class CreateReservationUseCase {
 
     const customerId = CustomerId.from(command.customerId);
     const therapistId = TherapistId.from(command.therapistId);
+    if (!(await this.therapists.isBookable(therapistId))) {
+      throw new DomainError('UNKNOWN_THERAPIST', 'Esa terapeuta no está en el equipo.');
+    }
     const slot = TimeSlot.fromStartAndDuration(command.startsAt, offering.durationMinutes);
+    if (!(await this.hours.isOpen(slot))) {
+      throw new DomainError('OUTSIDE_WORKING_HOURS', 'Ese horario está fuera de la jornada.');
+    }
     const policy = await this.policies.current();
 
     await this.repository.expirePendingHolds(now);
@@ -73,12 +83,14 @@ export class CreateReservationUseCase {
       depositAmount: offering.deposit,
       policy: policy.cancellation,
       paymentReference,
+      serviceName: offering.name,
+      price: offering.price,
       now,
       holdMinutes: policy.holdMinutes,
     });
 
     await this.repository.saveReservation(reservation);
     await this.events.publish([reservationScheduled(reservation, offering.name, now)]);
-    return toReservationView(reservation, offering.name);
+    return toReservationView(reservation);
   }
 }
