@@ -59,7 +59,16 @@
         </ion-segment-button>
       </ion-segment>
 
-      <div class="section-stage" [attr.data-slide]="sectionSlide()">
+      <div
+        class="section-stage"
+        [class.dragging]="dragging()"
+        [attr.data-slide]="sectionSlide()"
+        [style.transform]="dragging() ? 'translate3d(' + dragX() + 'px, 0, 0)' : null"
+        (pointerdown)="onSectionPointerDown($event)"
+        (pointermove)="onSectionPointerMove($event)"
+        (pointerup)="onSectionPointerUp($event)"
+        (pointercancel)="onSectionPointerUp($event)"
+      >
       @if (errorMessage()) {
         <p class="message">{{ errorMessage() }}</p>
       } @else if (loading()) {

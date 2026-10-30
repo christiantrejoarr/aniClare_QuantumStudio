@@ -65,6 +65,8 @@ type DeleteTarget =
 
 type Section = 'reservas' | 'servicios' | 'terapeutas' | 'horas' | 'usuarios';
 
+const sectionOrder: Section[] = ['reservas', 'servicios', 'terapeutas', 'horas', 'usuarios'];
+
 type WeekFlag =
   | 'sunday'
   | 'monday'
@@ -127,6 +129,13 @@ export class AdminPage {
   readonly weekdays = weekdays;
   readonly section = signal<Section>('reservas');
   readonly sectionSlide = signal('');
+  readonly dragging = signal(false);
+  readonly dragX = signal(0);
+  private pointerId: number | null = null;
+  private pointerStartX = 0;
+  private pointerStartY = 0;
+  private pointerStartAt = 0;
+  private pointerAxis: 'undecided' | 'x' | 'y' = 'undecided';
   readonly reservations = signal<ReservationView[]>([]);
   readonly drafts = signal<ServiceDraft[]>([]);
   readonly users = signal<UserDraft[]>([]);
@@ -263,17 +272,65 @@ export class AdminPage {
 
   onSection(event: { detail: { value?: string | number } }): void {
     const value = event.detail.value;
-    if (value !== 'reservas' && value !== 'servicios' && value !== 'terapeutas' && value !== 'horas' && value !== 'usuarios') {
+    if (!isSection(value)) {
       return;
     }
-    if (value === this.section()) {
+    this.showSection(value);
+  }
+
+  onSectionPointerDown(event: PointerEvent): void {
+    if (this.pointerId !== null || this.confirmOpen() || !this.mobileGesture(event) || this.interactiveTarget(event.target)) {
       return;
     }
-    const order = ['reservas', 'servicios', 'terapeutas', 'horas', 'usuarios'];
-    const forward = order.indexOf(value) > order.indexOf(this.section());
-    this.section.set(value);
-    const side = this.sectionSlide().endsWith('-a') ? 'b' : 'a';
-    this.sectionSlide.set(`${forward ? 'forward' : 'back'}-${side}`);
+    this.pointerId = event.pointerId;
+    this.pointerStartX = event.clientX;
+    this.pointerStartY = event.clientY;
+    this.pointerStartAt = event.timeStamp;
+    this.pointerAxis = 'undecided';
+  }
+
+  onSectionPointerMove(event: PointerEvent): void {
+    if (event.pointerId !== this.pointerId) {
+      return;
+    }
+    const dx = event.clientX - this.pointerStartX;
+    const dy = event.clientY - this.pointerStartY;
+    if (this.pointerAxis === 'undecided') {
+      if (Math.hypot(dx, dy) < 12) {
+        return;
+      }
+      this.pointerAxis = Math.abs(dx) > Math.abs(dy) * 1.15 ? 'x' : 'y';
+      if (this.pointerAxis === 'y') {
+        this.pointerId = null;
+        return;
+      }
+      if (event.currentTarget instanceof HTMLElement) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+      this.dragging.set(true);
+    }
+    this.dragX.set(this.resisted(dx));
+  }
+
+  onSectionPointerUp(event: PointerEvent): void {
+    if (event.pointerId !== this.pointerId) {
+      return;
+    }
+    const dx = event.clientX - this.pointerStartX;
+    const elapsed = event.timeStamp - this.pointerStartAt;
+    const horizontal = this.pointerAxis === 'x';
+    this.pointerId = null;
+    this.pointerAxis = 'undecided';
+    this.dragging.set(false);
+    this.dragX.set(0);
+    if (!horizontal) {
+      return;
+    }
+    const flick = elapsed < 280 && Math.abs(dx) > 28;
+    if (Math.abs(dx) < 56 && !flick) {
+      return;
+    }
+    this.stepSection(dx < 0 ? 1 : -1);
   }
 
   therapistName(id: string): string {
@@ -880,10 +937,63 @@ export class AdminPage {
     };
   }
 
+  private showSection(value: Section): void {
+    if (value === this.section()) {
+      return;
+    }
+    const forward = sectionOrder.indexOf(value) > sectionOrder.indexOf(this.section());
+    this.section.set(value);
+    const side = this.sectionSlide().endsWith('-a') ? 'b' : 'a';
+    this.sectionSlide.set(`${forward ? 'forward' : 'back'}-${side}`);
+    queueMicrotask(() => {
+      document.querySelector('ion-segment-button.segment-button-checked')?.scrollIntoView({
+        inline: 'center',
+        block: 'nearest',
+        behavior: 'smooth',
+      });
+    });
+  }
+
+  private stepSection(delta: 1 | -1): void {
+    const next = sectionOrder[sectionOrder.indexOf(this.section()) + delta];
+    if (next) {
+      this.showSection(next);
+    }
+  }
+
+  private resisted(dx: number): number {
+    const index = sectionOrder.indexOf(this.section());
+    const blocked = (index <= 0 && dx > 0) || (index >= sectionOrder.length - 1 && dx < 0);
+    if (blocked) {
+      return dx * 0.28;
+    }
+    return Math.max(-140, Math.min(140, dx));
+  }
+
+  private mobileGesture(event: PointerEvent): boolean {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+      return true;
+    }
+    return window.matchMedia('(max-width: 900px)').matches;
+  }
+
+  private interactiveTarget(target: EventTarget | null): boolean {
+    return (
+      target instanceof Element &&
+      target.closest(
+        'input, textarea, select, button, a, ion-button, ion-input, ion-textarea, ion-toggle, ion-select, ion-datetime, ion-checkbox, ion-radio',
+      ) !== null
+    );
+  }
+
   private readError(error: HttpErrorResponse, fallback: string): string {
     const message = error.error?.message;
     return typeof message === 'string' ? message : fallback;
   }
+}
+
+function isSection(value: string | number | undefined): value is Section {
+  return sectionOrder.some((section) => section === value);
 }
 
 function pesosToCents(value: string): number | null {

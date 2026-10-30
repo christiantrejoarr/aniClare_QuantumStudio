@@ -4,12 +4,21 @@
   overflow: hidden;
 }
 
+.section-stage {
+  min-height: 62vh;
+  touch-action: pan-y;
+}
+
 .section-stage[data-slide^='forward'] {
   animation: aniclare-ios-in 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 .section-stage[data-slide^='back'] {
   animation: aniclare-ios-back 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.section-stage.dragging {
+  animation: none;
 }
 
 .eyebrow {
@@ -63,17 +72,38 @@ ion-toggle {
 
 ion-segment {
   margin-top: 14px;
+  padding: 4px;
+  border-radius: 16px;
+  background: #fff;
   --background: transparent;
 }
 
 ion-segment-button {
   --background: transparent;
   --background-checked: transparent;
-  --background-hover: transparent;
-  --background-focused: transparent;
+  --background-hover: rgb(47 78 107 / 8%);
+  --background-focused: rgb(47 78 107 / 8%);
   --indicator-color: #2f4e6b;
   --color: #2f4e6b;
   --color-checked: #2f4e6b;
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  min-height: 36px;
+  font-weight: 700;
+}
+
+ion-segment.ios ion-segment-button {
+  --background-checked: #2f4e6b;
+  --color-checked: #fbeff4;
+}
+
+ion-segment.ios ion-segment-button.segment-button-checked {
+  --color: #fbeff4;
+}
+
+ion-segment.ios ion-segment-button.segment-button-checked ion-label {
+  color: #fbeff4;
 }
 
 ion-button {
