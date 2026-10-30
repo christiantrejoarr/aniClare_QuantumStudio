@@ -7,6 +7,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { DatabaseModule } from './shared/infrastructure/database/database.module';
+import { LiveModule } from './shared/live/live.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DatabaseModule } from './shared/infrastructure/database/database.module
     BookingModule,
     IdentityModule,
     AdminModule,
+    LiveModule,
   ],
   controllers: [HealthController],
 })

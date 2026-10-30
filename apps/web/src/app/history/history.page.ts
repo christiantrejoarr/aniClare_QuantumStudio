@@ -6,6 +6,7 @@ import { IonContent, IonHeader, IonRefresher, IonRefresherContent, IonTitle, Ion
 import { BookingApi, ReservationView } from '../core/booking-api';
 import { formatPesos, SpaTherapist } from '../core/catalog';
 import { guestCustomerId } from '../core/guest-id';
+import { LiveUpdates } from '../core/live-updates';
 import { TherapistApi } from '../core/therapist-api';
 
 const statusLabel: Record<ReservationView['status'], string> = {
@@ -30,6 +31,17 @@ export class HistoryPage {
   readonly reservations = signal<ReservationView[]>([]);
   readonly therapists = signal<SpaTherapist[]>([]);
   readonly errorMessage = signal<string | null>(null);
+
+  constructor() {
+    inject(LiveUpdates)
+      .changes(['reservations', 'therapists'])
+      .subscribe(() => {
+        this.therapistApi.list().subscribe({
+          next: (therapists) => this.therapists.set(therapists),
+        });
+        this.load();
+      });
+  }
 
   ionViewWillEnter(): void {
     this.therapistApi.list().subscribe({

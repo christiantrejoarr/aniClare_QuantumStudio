@@ -11,7 +11,8 @@
         label="Servicio"
         labelPlacement="stacked"
         interface="popover"
-        [value]="serviceId()"
+        placeholder="Elige un servicio"
+        [value]="serviceId() || undefined"
         (ionChange)="onService($event)"
       >
         @for (service of services(); track service.id) {
@@ -27,7 +28,8 @@
         label="Terapeuta"
         labelPlacement="stacked"
         interface="popover"
-        [value]="therapistId()"
+        placeholder="Elige una terapeuta"
+        [value]="therapistId() || undefined"
         (ionChange)="onTherapist($event)"
       >
         @for (therapist of therapists(); track therapist.id) {
@@ -38,7 +40,9 @@
 
     <div class="when">
       <ion-label>Horario</ion-label>
-      @if (calendarStamp() > 0) {
+      @if (!serviceId() || !therapistId()) {
+        <p class="waiting">Elige el servicio y la terapeuta para ver los horarios.</p>
+      } @else if (calendarStamp() > 0) {
         @for (stamp of [calendarStamp()]; track stamp) {
           <ion-datetime
             locale="es-MX"

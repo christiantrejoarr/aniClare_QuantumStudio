@@ -20,8 +20,10 @@
     <h2>Servicios</h2>
     @if (loadError()) {
       <p class="message">{{ loadError() }}</p>
-    } @else if (services().length === 0) {
+    } @else if (!catalogReady()) {
       <p class="message">Cargando servicios...</p>
+    } @else if (services().length === 0) {
+      <p class="message">Todavía no hay servicios publicados.</p>
     }
     @for (service of services(); track service.id; let i = $index) {
       <article class="service-card" [style.animation-delay.ms]="120 + i * 90">
@@ -35,6 +37,5 @@
         </div>
       </article>
     }
-    <ion-button class="admin-button" expand="block" fill="solid" (click)="openAdmin()">Administración</ion-button>
   </section>
 </ion-content>

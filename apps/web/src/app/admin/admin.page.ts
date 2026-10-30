@@ -23,6 +23,7 @@ import {
 import { AdminApi, AdminSession, AdminTherapist, AdminUser, ManagedService, WorkingHours } from '../core/admin-api';
 import { ReservationView } from '../core/booking-api';
 import { formatPesos } from '../core/catalog';
+import { LiveUpdates } from '../core/live-updates';
 
 interface ServiceDraft {
   id: string;
@@ -118,9 +119,6 @@ export class AdminPage {
   private readonly api = inject(AdminApi);
   private readonly router = inject(Router);
 
-  constructor() {
-    addIcons({ pencilOutline, trashOutline });
-  }
   readonly formatPesos = formatPesos;
   readonly statusLabel = statusLabel;
   readonly authenticated = signal(false);
@@ -128,6 +126,7 @@ export class AdminPage {
   readonly password = signal('');
   readonly weekdays = weekdays;
   readonly section = signal<Section>('reservas');
+  readonly sectionSlide = signal('');
   readonly reservations = signal<ReservationView[]>([]);
   readonly drafts = signal<ServiceDraft[]>([]);
   readonly users = signal<UserDraft[]>([]);
@@ -153,6 +152,17 @@ export class AdminPage {
   readonly busyReservation = signal<string | null>(null);
   readonly confirmOpen = signal(false);
   private readonly deleteTarget = signal<DeleteTarget | null>(null);
+
+  constructor() {
+    addIcons({ pencilOutline, trashOutline });
+    inject(LiveUpdates)
+      .changes(['reservations', 'catalog', 'therapists', 'hours', 'users'])
+      .subscribe(() => {
+        if (this.authenticated()) {
+          this.load(true);
+        }
+      });
+  }
 
   ionViewWillEnter(): void {
     if (!this.api.token()) {
@@ -253,9 +263,17 @@ export class AdminPage {
 
   onSection(event: { detail: { value?: string | number } }): void {
     const value = event.detail.value;
-    if (value === 'reservas' || value === 'servicios' || value === 'terapeutas' || value === 'horas' || value === 'usuarios') {
-      this.section.set(value);
+    if (value !== 'reservas' && value !== 'servicios' && value !== 'terapeutas' && value !== 'horas' && value !== 'usuarios') {
+      return;
     }
+    if (value === this.section()) {
+      return;
+    }
+    const order = ['reservas', 'servicios', 'terapeutas', 'horas', 'usuarios'];
+    const forward = order.indexOf(value) > order.indexOf(this.section());
+    this.section.set(value);
+    const side = this.sectionSlide().endsWith('-a') ? 'b' : 'a';
+    this.sectionSlide.set(`${forward ? 'forward' : 'back'}-${side}`);
   }
 
   therapistName(id: string): string {
@@ -709,8 +727,10 @@ export class AdminPage {
     this.hoursMessage.set(this.readError(error, fallback));
   }
 
-  private load(): void {
-    this.loading.set(true);
+  private load(silent = false): void {
+    if (!silent) {
+      this.loading.set(true);
+    }
     this.errorMessage.set(null);
     forkJoin({
       reservations: this.api.reservations(),

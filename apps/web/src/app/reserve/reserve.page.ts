@@ -19,6 +19,7 @@ import { BookingApi, OpenDay, ReservationView } from '../core/booking-api';
 import { CatalogApi } from '../core/catalog-api';
 import { formatPesos, SpaService, SpaTherapist } from '../core/catalog';
 import { guestCustomerId } from '../core/guest-id';
+import { LiveUpdates } from '../core/live-updates';
 import { TherapistApi } from '../core/therapist-api';
 
 @Component({
@@ -61,6 +62,12 @@ export class ReservePage {
   private hoursRequest = 0;
   private styledDatetime: HTMLElement | null = null;
 
+  constructor() {
+    inject(LiveUpdates)
+      .changes(['catalog', 'therapists', 'hours', 'reservations'])
+      .subscribe(() => this.reloadChoices());
+  }
+
   ngAfterViewChecked(): void {
     const datetime = document.querySelector('ion-datetime');
     if (!(datetime instanceof HTMLElement) || datetime === this.styledDatetime) {
@@ -100,11 +107,15 @@ export class ReservePage {
   }
 
   ionViewWillEnter(): void {
+    this.reloadChoices();
+  }
+
+  private reloadChoices(): void {
     this.catalog.list().subscribe({
       next: (services) => {
         this.services.set(services);
-        if (!services.some((service) => service.id === this.serviceId()) && services[0]) {
-          this.serviceId.set(services[0].id);
+        if (this.serviceId() && !services.some((service) => service.id === this.serviceId())) {
+          this.serviceId.set('');
         }
         this.refreshHours();
       },
@@ -113,8 +124,8 @@ export class ReservePage {
     this.therapistApi.list().subscribe({
       next: (therapists) => {
         this.therapists.set(therapists);
-        if (!therapists.some((therapist) => therapist.id === this.therapistId()) && therapists[0]) {
-          this.therapistId.set(therapists[0].id);
+        if (this.therapistId() && !therapists.some((therapist) => therapist.id === this.therapistId())) {
+          this.therapistId.set('');
         }
         this.refreshHours();
       },

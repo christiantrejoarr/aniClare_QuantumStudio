@@ -1,6 +1,15 @@
 .panel {
   width: min(720px, calc(100% - 32px));
   margin: 12px auto 32px;
+  overflow: hidden;
+}
+
+.section-stage[data-slide^='forward'] {
+  animation: aniclare-ios-in 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.section-stage[data-slide^='back'] {
+  animation: aniclare-ios-back 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 .eyebrow {

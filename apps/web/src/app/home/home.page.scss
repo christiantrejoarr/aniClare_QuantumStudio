@@ -137,20 +137,6 @@ h1::after {
   font-size: 1.15rem;
 }
 
-.admin-button {
-  margin: 18px 0 28px;
-  font-weight: 700;
-  --background: #fbeff4;
-  --background-activated: #f3d5e2;
-  --background-hover: #f7e4ec;
-  --color: #2f4e6b;
-  --border-color: #2f4e6b;
-  --border-width: 2px;
-  --border-style: solid;
-  --border-radius: 16px;
-  --box-shadow: 0 10px 22px rgb(47 78 107 / 14%);
-}
-
 @media (prefers-reduced-motion: reduce) {
   h1::after {
     animation: none;
